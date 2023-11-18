@@ -7,27 +7,56 @@ from scipy.stats import rankdata # for ranking the candidates
 #                     Pre-requisites                        #
 #############################################################
 
-# The given data encoded into vectors and matrices
+# Raw Data
+load = {'seq': 51, 'type': 'Load', 'timestamp': '2023-11-17T08:55:55', 'loadId': 40022, 'originLatitude': 29.9561, 'originLongitude': -90.0773, 'destinationLatitude': 33.6821, 'destinationLongitude': -84.1488, 'equipmentType': 'Flatbed', 'price': 1000.0, 'mileage': 480.0}
 
-attributes = np.array(["GRE", "GPA", "College ranking", "Recommendation Rating", "Interview Rating"])
-candidates = np.array(["Alfred", "Beverly", "Calvin", "Diane", "Edward", "Fran"])
+data = [
+    {'seq': 52, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37','truckId': 189, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 53, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37','truckId': 201, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 54, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37','truckId': 301, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 55, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37','truckId': 401, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 56, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37','truckId': 501, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'}
+]
+
+# Determine if the load's trip is short or long
+def get_load_trip_length(load):
+    return 1 if load['mileage'] >= 200 else 0  # 1 for long, 0 for short
+
+# Load trip length
+load_trip_length = get_load_trip_length(load)
+
+trucker_preferences = {
+    trucker['truckId']: 1 if trucker['nextTripLengthPreference'] == 'Long' else 0
+    for trucker in data
+}
+
+# The given data encoded into vectors and matrices
+attributes = np.array(["Profit", "nextTripLengthPreference", "idleTime"])
+candidates = np.array([189, 201, 301, 401, 501])
 raw_data = np.array([
-    [690, 3.1,  9,  7,  4],
-    [590, 3.9,  7,  6, 10],
-    [600, 3.6,  8,  8,  7],
-    [620, 3.8,  7, 10,  6],
-    [700, 2.8, 10,  4,  6],
-    [650, 4.0,  6,  9,  8],
+    [690, 1,  1],
+    [590, 0,  0.25],
+    [600, 1,  0.5],
+    [620, 0,  2],
+    [700, 1, 0.75],
 ])
 
-weights = np.array([0.3, 0.2, 0.2, 0.15, 0.15])
+for i in range(len(candidates)):
+    trucker_id = candidates[i]
+    preference_match = 1 if trucker_preferences[trucker_id] == load_trip_length else 0
+    raw_data[i][1] = preference_match
+
+# Adjusting the weights
+weights = np.array([0.5, 0.2, 0.3])
 
 # The indices of the attributes (zero-based) that are considered beneficial.
-# Those indices not mentioned are assumed to be cost attributes.
-benefit_attributes = set([0, 1, 2, 3, 4])
+# 'idleTime' is a cost attribute (therefore omited from benefit attributes)
+benefit_attributes = set([0, 1])  # 'Profit' and 'nextTripLengthPreference' are benefit attributes
 
 # Display the raw data we have
 pd.DataFrame(data=raw_data, index=candidates, columns=attributes)
+print(raw_data)
+print('\n')
 
 
 #############################################################
@@ -107,5 +136,11 @@ pd.DataFrame(data=zip(cs_order, sp_order, sn_order), index=range(1, m + 1), colu
 #############################################################
 #                      Printing Results                     #
 #############################################################
-print("The best candidate/alternative according to C* is " + cs_order[0])
-print("The preferences in descending order are " + ", ".join(cs_order) + ".")
+
+
+# Ensure that there are entries in cs_order before accessing them
+if cs_order.size > 0:
+    print("The best candidate/alternative according to C* is " + str(cs_order[0]))
+    print("The preferences in descending order are " + ", ".join(map(str, cs_order)) + ".")
+else:
+    print("No candidates available for ranking.")
