@@ -141,11 +141,11 @@ load = {
 }
 
 truck_data = [
-    {'seq': 52, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 189, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long', 'attributes': [690, 1, 1]},
-    {'seq': 53, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 201, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short', 'attributes': [590, 0, 0.25]},
-    {'seq': 54, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 301, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long', 'attributes': [600, 1, 0.5]},
-    {'seq': 55, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 401, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short', 'attributes': [620, 0, 2]},
-    {'seq': 56, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 501, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long', 'attributes': [700, 1, 0.75]}
+    {'seq': 52, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 189, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 53, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 201, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 54, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 301, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 55, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 401, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 56, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 501, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'}
 ]
 
 # Create an instance of RankingSystem
