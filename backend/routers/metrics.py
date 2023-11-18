@@ -59,6 +59,18 @@ async def get_metrics(truck_id: str):
         metrics_data["earnings"] = random.randint(0, 4000)
         store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
     if("mileage" not in metrics_data):
-        metrics_data["mileage"] = random.randint(0, 10000)
+        metrics_data["mileage"] = metrics_data["earnings"] * random.randint(50, 88) / 100
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
+    if("last_month_earnings" not in metrics_data):
+        metrics_data["last_month_earnings"] = random.randint(0, 4000)
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
+    if("last_month_mileage" not in metrics_data):
+        metrics_data["last_month_mileage"] = metrics_data["last_month_earnings"] * random.randint(50, 88) / 100
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
+    if("load_acceptance_rate" not in metrics_data):
+        metrics_data["load_acceptance_rate"] = random.randint(0, 100)
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
+    if("last_month_load_acceptance_rate" not in metrics_data):
+        metrics_data["last_month_load_acceptance_rate"] = random.randint(0, 100)
         store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
     return metrics_data
