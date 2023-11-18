@@ -1,82 +1,68 @@
 from datetime import datetime
 import math
 
-class Heuristic:
-    """
-    Heuristic class is used to initially find potential trucks for a load based on various attributes 
-    like profit, equipment type, trip length preference, and idle time.
-    """
+def get_score(load, truck):
+    """Calculates a simple heuristic score for given truck."""
+    score = 0
+    score += calculate_profit_score(load, truck)
+    if score <= 0:
+        return 0
+    score += trip_length_preference_score(load, truck)
+    score += idle_time_score(load, truck)
+    return score
 
-    def __init__(self, load, truck):
-        """
-        Initializes the Heuristic with load and truck data.
-        """
-        self.load = load
-        self.truck = truck
+def calculate_profit_score(load, truck):
+    """Calculates a score based on estimated profit."""
+    # Profit calculation
+    distance_in_miles = ((bird_fly_distance(truck['positionLatitude'], truck['positionLongitude'], load['originLatitude'], load['originLongitude'])) * 0.000621371)
+    profit = load['price'] - (load['mileage'] * 1.38) - (distance_in_miles*1.38)
+    return profit / 1000  # Scale down the profit for scoring
 
-    def get_score(self):
-        """Calculates a simple heuristic score for given truck."""
-        score = 0
-        score += self.calculate_profit_score(self.truck)
-        if score <= 0:
-            return 0
-        score += self.trip_length_preference_score(self.truck)
-        score += self.idle_time_score(self.truck)
-        return score
+def trip_length_preference_score(load, truck):
+    """Scores based on trip length preference."""
+    preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
+    load_trip_length = 1 if load['mileage'] >= 200 else 0
+    return 5 if preference == load_trip_length else 0
 
-    def calculate_profit_score(self, truck):
-        """Calculates a score based on estimated profit."""
-        # Profit calculation
-        distance_in_miles = ((Heuristic.bird_fly_distance(self.truck['positionLatitude'], self.truck['positionLongitude'], self.load['originLatitude'], self.load['originLongitude'])) * 0.000621371)
-        profit = self.load['price'] - (self.load['mileage'] * 1.38) - (distance_in_miles*1.38)
-        return profit / 1000  # Scale down the profit for scoring
+def idle_time_score(load, truck):
+    """Scores based on the difference in timestamp (idle time)."""
+    # Convert string timestamps to datetime objects
+    truck_timestamp = datetime.fromisoformat(truck['timestamp'])
+    load_timestamp = datetime.fromisoformat(load['timestamp'])
 
-    def trip_length_preference_score(self, truck):
-        """Scores based on trip length preference."""
-        preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
-        load_trip_length = 1 if self.load['mileage'] >= 200 else 0
-        return 5 if preference == load_trip_length else 0
+    # Calculate the absolute time difference in hours
+    time_difference = abs((truck_timestamp - load_timestamp).total_seconds() / 3600)
 
-    def idle_time_score(self, truck):
-        """Scores based on the difference in timestamp (idle time)."""
-        # Convert string timestamps to datetime objects
-        truck_timestamp = datetime.fromisoformat(truck['timestamp'])
-        load_timestamp = datetime.fromisoformat(self.load['timestamp'])
+    # Assuming a maximum idle time threshold (e.g., 48 hours)
+    max_idle_threshold = 48
+    # Trucks with shorter idle times get higher scores
+    return max(0, max_idle_threshold - time_difference) / max_idle_threshold * 5
 
-        # Calculate the absolute time difference in hours
-        time_difference = abs((truck_timestamp - load_timestamp).total_seconds() / 3600)
+def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
+    # Radius of the Earth in meters
+    R = 6371000 
 
-        # Assuming a maximum idle time threshold (e.g., 48 hours)
-        max_idle_threshold = 48
-        # Trucks with shorter idle times get higher scores
-        return max(0, max_idle_threshold - time_difference) / max_idle_threshold * 5
-    
-    @staticmethod
-    def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
-        # Radius of the Earth in meters
-        R = 6371000 
+    # Convert degrees to radians
+    truck_lat, truck_long, load_lat, load_long = map(math.radians, [truck_lat, truck_long, load_lat, load_long])
 
-        # Convert degrees to radians
-        truck_lat, truck_long, load_lat, load_long = map(math.radians, [truck_lat, truck_long, load_lat, load_long])
+    # Differences
+    diff_lat = load_lat - truck_lat
+    diff_long = load_long - truck_long
 
-        # Differences
-        diff_lat = load_lat - truck_lat
-        diff_long = load_long - truck_long
+    # Haversine formula
+    a = math.sin(diff_lat/2) ** 2 + math.cos(truck_lat) * math.cos(load_lat) * math.sin(diff_long/2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
-        # Haversine formula
-        a = math.sin(diff_lat/2) ** 2 + math.cos(truck_lat) * math.cos(load_lat) * math.sin(diff_long/2) ** 2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    # Distance in meters
+    distance = R * c
 
-        # Distance in meters
-        distance = R * c
-
-        return distance
+    return distance
 
 
 #############################
 #         TESTING           #
 #############################
-"""
+
 # Load and truck data from algorithm.py
 load = {
     'seq': 51,
@@ -124,9 +110,7 @@ truck_list = [
 
 # Example of using the Heuristic class
 for truck in truck_list: 
-    heuristic = Heuristic(load, truck)
-    truck_score = heuristic.get_score()
+    truck_score = get_score(load, truck)
 
     print("Truck score:", truck_score)
     print()
-"""
