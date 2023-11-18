@@ -9,10 +9,10 @@ import Dropdown from 'primevue/dropdown'
 import Menubar from 'primevue/menubar'
 import Card from 'primevue/card'
 import Divider from 'primevue/divider'
-import 'primevue/resources/themes/saga-blue/theme.css' // or any theme of your choice
+import 'primevue/resources/themes/soho-dark/theme.css' // or any theme of your choice
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
-
+import InputSwitch from 'primevue/inputswitch';
 
 import App from './App.vue'
 import router from './router'
@@ -28,5 +28,6 @@ app.component('Dropdown', Dropdown)
 app.component('Menubar', Menubar)
 app.component('Card', Card)
 app.component('Divider', Divider)
+app.component('InputSwitch', InputSwitch)
 
 app.mount('#app')

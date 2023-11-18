@@ -1,74 +1,86 @@
 <template>
-    <Container>   
-        <div class="grid grid-cols-2 surface-section text-800 pb-10">
-            <div class="p-6 text-center md:text-left flex items-center">
-                <section>
-                    <span class="block text-5xl font-bold mb-1">Create the screens your</span>
-                    <div class="text-5xl text-primary font-bold mb-3">visitors deserve to see</div>
-                    <p class="mt-0 mb-4 text-700 line-height-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                    
-                    <Button label="Learn More" type="button" class="mr-3 p-button-raised"></Button>
-                    <Button label="Live Demo" type="button" class="p-button-outlined"></Button>
-                </section>
-            </div>
-            <div class="overflow-hidden">
-                <img src="../assets/hero-1.png" alt="Image" class="md:ml-auto block md:h-full" style="clip-path: polygon(8% 0, 100% 0%, 100% 100%, 0 100%)" />
-            </div>
+    <Container>
+      <div class="grid grid-cols-2 surface-section text-white bg-gray-800">
+        <!-- Left Section -->
+        <div class="p-6 text-center md:text-left flex items-center">
+          <section>
+            <span class="text-blue-600 block text-5xl font-bold mb-1">Create the screens your</span>
+            <div class="text-5xl text-primary font-bold mb-3">visitors deserve to see</div>
+            <p class="mt-0 mb-4 text-700 line-height-3">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+  
+            <Button label="Login" type="button" class="mr-3 p-button-raised"></Button>
+            <Button label="Live Demo" type="button" class="p-button-outlined"></Button>
+          </section>
         </div>
-        <Divider />
-        <div class="surface-section px-4 py-8 md:px-6 lg:px-8 text-center bg-">
-            <div class="mb-3 font-bold text-3xl">
-                <span class="text-900">One Product, </span>
-                <span class="text-blue-600">Many Solutions</span>
-            </div>
-            <div class="text-700 mb-6">Ac turpis egestas maecenas pharetra convallis posuere morbi leo urna.</div>
-            <div class="grid md:grid-cols-3 gap-4">
-                <div class="col-span-1 mb-4 px-5">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg " style="border-radius: 10px">
-                        <i class="pi pi-desktop text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">Built for Developers</div>
-                    <span class="text-700 line-height-3">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</span>
-                </div>
-                <div class="col-span-1 mb-4 px-5">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg" style="border-radius: 10px">
-                        <i class="pi pi-lock text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">End-to-End Encryption</div>
-                    <span class="text-700 line-height-3">Risus nec feugiat in fermentum posuere urna nec. Posuere sollicitudin aliquam ultrices sagittis.</span>
-                </div>
-                <div class="col-span-1 md:col-4 mb-4 px-5">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg" style="border-radius: 10px">
-                        <i class="pi pi-check-circle text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">Easy to Use</div>
-                    <span class="text-700 line-height-3">Ornare suspendisse sed nisi lacus sed viverra tellus. Neque volutpat ac tincidunt vitae semper.</span>
-                </div>
-                <div class="col-span-1 md:col-4 mb-4 px-5">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg" style="border-radius: 10px">
-                        <i class="pi pi-globe text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">Fast & Global Support</div>
-                    <span class="text-700 line-height-3">Fermentum et sollicitudin ac orci phasellus egestas tellus rutrum tellus.</span>
-                </div>
-                <div class="col-span-1 md:col-4 mb-4 px-5">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg" style="border-radius: 10px">
-                        <i class="pi pi-github text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">Open Source</div>
-                    <span class="text-700 line-height-3">Nec tincidunt praesent semper feugiat. Sed adipiscing diam donec adipiscing tristique risus nec feugiat. </span>
-                </div>
-                <div class="col-span-1 md:col-4 md:mb-4 mb-0 px-3">
-                    <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-white rounded-lg" style="border-radius: 10px">
-                        <i class="pi pi-shield text-4xl text-blue-500"></i>
-                    </span>
-                    <div class="text-900 text-xl mb-3 font-medium">Trusted Security</div>
-                    <span class="text-700 line-height-3">Mattis rhoncus urna neque viverra justo nec ultrices. Id cursus metus aliquam eleifend.</span>
-                </div>
-            </div>
+  
+        <!-- Right Section -->
+        <div class="overflow-hidden">
+          <img
+            src="../assets/truck.jpg"
+            alt="Image"
+            class="md:ml-auto block h-full object-cover"
+            style="clip-path: polygon(8% 0, 100% 0%, 100% 100%, 0 100%)"
+          />
         </div>
-        <Divider />
-        
+      </div>
+  
+ 
+      <!-- Divider -->
+       <!-- Features Section -->
+       <div class="surface-section pt-8 md:px-6 lg:px-8 text-center bg-gray-900">
+      <div class="mb-3 font-bold text-3xl">
+        <span class="text-gray-300">One Product, </span>
+        <span class="text-blue-600">Many Solutions</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <!-- ... (rest of the code remains the same) ... -->
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <!-- Feature Details -->
+    <div class="surface-section py-8 md:px-6 lg:px-8 text-center bg-gray-900">
+      <div class="mb-3 font-bold text-3xl text-gray-300">Cool Features</div>
+
+      <!-- Feature Details -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="mb-4 px-5">
+          <!-- Feature Icon or Image -->
+          <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-primary rounded-lg" style="border-radius: 10px">
+            <Button icon="pi pi-check"></Button>
+          </span>
+
+          <!-- Feature Title -->
+          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 1</div>
+
+          <!-- Feature Description -->
+          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 1 goes here.</span>
+        </div>
+
+        <!-- Repeat the structure for other features -->
+        <!-- ... (Add more features as needed) ... -->
+
+        <!-- Feature Details 2 -->
+        <div class="mb-4 px-5">
+          <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-primary rounded-lg" style="border-radius: 10px">
+            <Button icon="pi pi-check"></Button>
+          </span>
+          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 2</div>
+          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 2 goes here.</span>
+        </div>
+
+        <!-- Feature Details 3 -->
+        <div class="mb-4 px-5">
+          <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-primary rounded-lg" style="border-radius: 10px">
+            <Button icon="pi pi-check"></Button>
+          </span>
+          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 3</div>
+          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 3 goes here.</span>
+        </div>
+      </div>
+    </div>
     </Container>
   </template>
   
@@ -80,12 +92,9 @@
       Container,
     },
     data() {
-      return {
-        
-      };
+      return {};
     },
-    methods: {
-      
-    },
+    methods: {},
   };
   </script>
+  

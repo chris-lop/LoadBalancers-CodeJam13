@@ -1,6 +1,6 @@
 <template>
-    <div class="flex flex-col min-h-screen bg-slate-200">
-        <div class="pt-36">
+    <div class="flex flex-col min-h-screen bg-gray-800">
+        <div class="pt-[8.7%]">
             <slot></slot>
         </div>
     </div>
