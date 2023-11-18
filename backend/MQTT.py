@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import math
 import time 
 import heapq
+from heuristic import Heuristic
 
 load_dotenv() 
 trucks = {}
@@ -23,6 +24,10 @@ def on_message(client, userdata, msg):
         init_truck(payload)
     elif(payload["type"] == "Load"):
         init_load(payload)
+        load_id = payload["loadId"]
+        for truck in loads[load_id]["potentialTrucks"]:
+            h_instance = Heuristic(loads[load_id], truck)
+            print(h_instance.get_score())      
     else:
         print("Unknown type: " + payload["type"])
 
@@ -45,16 +50,12 @@ def init_load(payload):
             continue
         distance = bird_fly_distance(truck['positionLatitude'], truck["positionLongitude"], payload['originLatitude'], payload["originLongitude"])
         heapq.heappush(dists, (distance, truck_id))    
-    # print 50 closest trucks
+    # print 50 closest trucks and tie all potential trucks to load
     for i in range(50):
         if len(dists) == 0:
             break
         truck_id = heapq.heappop(dists)[1]
         loads[load_id]["potentialTrucks"].append(trucks[truck_id])
-        i+=1
-    print("MODIFIED LOAD/n")
-    print(loads[load_id]["potentialTrucks"])
-    print("END OF PRINT/n")
     #Add to the load a list of all potential trucks
 
     #     score = calculate_score(trucks[truck_id], loads[load_id])

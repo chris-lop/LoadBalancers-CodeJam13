@@ -76,7 +76,7 @@ class Heuristic:
 #############################
 #         TESTING           #
 #############################
-
+"""
 # Load and truck data from algorithm.py
 load = {
     'seq': 51,
@@ -129,3 +129,4 @@ for truck in truck_list:
 
     print("Truck score:", truck_score)
     print()
+"""
