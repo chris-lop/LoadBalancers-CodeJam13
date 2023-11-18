@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import math
 import time 
 import heapq
-from heuristic import Heuristic
+from heuristic import get_score
 import concurrent.futures
 import asyncio
 from gmqtt import Client as MQTTClient
@@ -86,8 +86,7 @@ def notify_truck(load_id):
     truck_ids = load["potentialTrucks"].keys()
     # calculate score for each truck
     for truck_id in truck_ids:
-        h = Heuristic(load,trucks[truck_id])
-        scores[truck_id] = h.get_score()
+        scores[truck_id] = get_score(load, trucks[truck_id])
     # sort trucks by score
     truck_ids = sorted(truck_ids, key=lambda x: scores[x], reverse=True)
     # notify scores > 0
