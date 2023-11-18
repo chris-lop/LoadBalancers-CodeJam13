@@ -1,111 +1,208 @@
-# All the packages that we need to import
 import numpy as np               # for linear algebra
 import pandas as pd              # for tabular output
 from scipy.stats import rankdata # for ranking the candidates
+import random  # Import the random module
 
-#############################################################
-#                     Pre-requisites                        #
-#############################################################
+class RankingSystem:
+    """
+    RankingSystem class is used to rank the trucks of a load based on various attributes 
+    like profit, trip length preference, and idle time.
+    """
 
-# The given data encoded into vectors and matrices
+    def __init__(self, load, truck_data):
+        """
+        Initializes the RankingSystem with load and truck data.
+        """
+        #------------------------#
+        # Attribute Declarations #
+        #------------------------#
+        self.load = load
+        self.truck_data = truck_data
+        self.attributes = np.array(["Profit", "nextTripLengthPreference", "idleTime"])
+        self.weights = np.array([0.5, 0.2, 0.3])
+        self.benefit_attributes = set([0, 1])  # 'Profit' and 'nextTripLengthPreference' are benefit attributes ('idleTime' is a cost attribute)
+        self.candidates = np.array([truck['truckId'] for truck in truck_data])
+        self.raw_data = self.initialize_raw_data()
+        self.normalized_data = self.normalize_ratings()
+        self.weighted_normalized_data = self.calculate_weighted_normalized_ratings()
+        self.a_pos, self.a_neg = self.identify_pis_nis()
+        self.separation_measures = self.calculate_separation_measures()
 
-attributes = np.array(["GRE", "GPA", "College ranking", "Recommendation Rating", "Interview Rating"])
-candidates = np.array(["Alfred", "Beverly", "Calvin", "Diane", "Edward", "Fran"])
-raw_data = np.array([
-    [690, 3.1,  9,  7,  4],
-    [590, 3.9,  7,  6, 10],
-    [600, 3.6,  8,  8,  7],
-    [620, 3.8,  7, 10,  6],
-    [700, 2.8, 10,  4,  6],
-    [650, 4.0,  6,  9,  8],
-])
+    #------------------------#
+    # Method Implementations #
+    #------------------------#
+    def initialize_raw_data(self):
+        """Initializes raw data from truck data."""
+        raw_data = np.zeros((len(self.truck_data), len(self.attributes)))
 
-weights = np.array([0.3, 0.2, 0.2, 0.15, 0.15])
+        for i, truck in enumerate(self.truck_data):
+            # Calculate each attribute
+            raw_data[i][0] = self.calculate_profit(truck)  # Profit
+            raw_data[i][1] = self.trip_length_preference_match(truck)  # TripLengthPreference Match
+            raw_data[i][2] = self.calculate_idle_time(truck)  # Idle Time
 
-# The indices of the attributes (zero-based) that are considered beneficial.
-# Those indices not mentioned are assumed to be cost attributes.
-benefit_attributes = set([0, 1, 2, 3, 4])
+        return raw_data
 
-# Display the raw data we have
-pd.DataFrame(data=raw_data, index=candidates, columns=attributes)
+    def calculate_profit(self, truck):
+        """Calculate the profit for a truck."""
+        # TODO: Add deadhead to profit function, for now random
+        random_deadhead = (random.randint(1, 100) * 1.38)
 
+        return self.load['price'] - (self.load['mileage'] * 1.38) - (random_deadhead)
 
-#############################################################
-#                 Normalizing the ratings                   #
-#############################################################
+    def trip_length_preference_match(self, truck):
+        """Check if the truck's trip length preference matches the load's trip length."""
+        load_trip_length = self.get_load_trip_length(self.load)
+        preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
+        return 1 if preference == load_trip_length else 0
 
-m = len(raw_data)
-n = len(attributes)
-divisors = np.empty(n)
-for j in range(n):
-    column = raw_data[:,j]
-    divisors[j] = np.sqrt(column @ column)
+    def calculate_idle_time(self, truck):
+        """Calculate idle time (dummy function for now)."""
+        # TODO: Calculate idle time correctly
+        return 0.1
 
-raw_data /= divisors
+    def normalize_ratings(self):
+        """Normalizes ratings for each attribute."""
+        divisors = np.linalg.norm(self.raw_data, axis=0)
+        return self.raw_data / divisors
 
-columns = ["$X_{%d}$" % j for j in range(n)]
-pd.DataFrame(data=raw_data, index=candidates, columns=columns)
+    def calculate_weighted_normalized_ratings(self):
+        """Initializes raw data from truck data."""
+        return self.normalized_data * self.weights
 
+    def identify_pis_nis(self):
+        """Normalizes ratings for each attribute."""
+        a_pos = np.max(self.weighted_normalized_data, axis=0)
+        a_neg = np.min(self.weighted_normalized_data, axis=0)
+        for j in range(len(self.attributes)):
+            if j not in self.benefit_attributes:
+                a_pos[j], a_neg[j] = a_neg[j], a_pos[j]
+        return a_pos, a_neg
 
-#############################################################
-#       Calculating the Weighted Normalized Ratings         #
-#############################################################
-raw_data *= weights
-pd.DataFrame(data=raw_data, index=candidates, columns=columns)
-
-#############################################################
-#        Identifying PIS ( A*) and NIS ( A-)                #
-#############################################################
-a_pos = np.zeros(n)
-a_neg = np.zeros(n)
-for j in range(n):
-    column = raw_data[:,j]
-    max_val = np.max(column)
-    min_val = np.min(column)
+    def calculate_separation_measures(self):
+        """Normalizes ratings for each attribute."""
+        m = len(self.weighted_normalized_data)
+        sp = np.zeros(m)
+        sn = np.zeros(m)
+        cs = np.zeros(m)
+        for i in range(m):
+            diff_pos = self.weighted_normalized_data[i] - self.a_pos
+            diff_neg = self.weighted_normalized_data[i] - self.a_neg
+            sp[i] = np.linalg.norm(diff_pos)
+            sn[i] = np.linalg.norm(diff_neg)
+            cs[i] = sn[i] / (sp[i] + sn[i])
+        return [sp, sn, cs]  # Return as a list
     
-    # See if we want to maximize benefit or minimize cost (for PIS)
-    if j in benefit_attributes:
-        a_pos[j] = max_val
-        a_neg[j] = min_val
-    else:
-        a_pos[j] = min_val
-        a_neg[j] = max_val
+    def get_load_trip_length(self, load):
+        return 1 if load['mileage'] >= 200 else 0
+    
+    def get_rankings(self):
+        """Calculate rankings based on C*, S*, and S-"""
+        cs_order = self.rank_according_to(self.separation_measures[2])  # Assuming the third element is C*
+        return cs_order
+    
+    def rank_according_to(self, data):
+        # Rank in descending order, highest value gets rank 1
+        # 'max' method assigns the highest rank to all tied elements
+        ranks = rankdata(-data, method='max').astype(int)
+        sorted_indices = np.argsort(-data)  # Sort indices in descending order of data
+        return self.candidates[sorted_indices]
+    
+    def add_new_truck_and_rank(self, new_truck):
+        # Step 1: Add New Truck Data
+        new_truck_data = np.array([self.calculate_profit(new_truck),
+                                   self.trip_length_preference_match(new_truck),
+                                   self.calculate_idle_time(new_truck)])
+        self.raw_data = np.vstack([self.raw_data, new_truck_data])
+        self.candidates = np.append(self.candidates, new_truck['truckId'])
 
-pd.DataFrame(data=[a_pos, a_neg], index=["$A^*$", "$A^-$"], columns=columns)
+        # Step 2: Update Normalized and Weighted Normalized Data
+        divisors = np.linalg.norm(self.raw_data, axis=0)
+        self.normalized_data = self.raw_data / divisors
+        self.weighted_normalized_data = self.normalized_data * self.weights
 
-#############################################################
-#  Calculating Separation Measures and Similarities to PIS  #
-#############################################################
-sp = np.zeros(m)
-sn = np.zeros(m)
-cs = np.zeros(m)
+        # Step 3: Update PIS and NIS
+        self.a_pos, self.a_neg = self.identify_pis_nis()
 
-for i in range(m):
-    diff_pos = raw_data[i] - a_pos
-    diff_neg = raw_data[i] - a_neg
-    sp[i] = np.sqrt(diff_pos @ diff_pos)
-    sn[i] = np.sqrt(diff_neg @ diff_neg)
-    cs[i] = sn[i] / (sp[i] + sn[i])
+        # Step 4: Calculate Separation Measures for the New Truck
+        new_truck_index = len(self.weighted_normalized_data) - 1
+        diff_pos = self.weighted_normalized_data[new_truck_index] - self.a_pos
+        diff_neg = self.weighted_normalized_data[new_truck_index] - self.a_neg
+        sp = np.linalg.norm(diff_pos)
+        sn = np.linalg.norm(diff_neg)
+        cs = sn / (sp + sn)
+        # Update separation measures
+        self.separation_measures[0] = np.append(self.separation_measures[0], sp)
+        self.separation_measures[1] = np.append(self.separation_measures[1], sn)
+        self.separation_measures[2] = np.append(self.separation_measures[2], cs)
 
-pd.DataFrame(data=zip(sp, sn, cs), index=candidates, columns=["$S^*$", "$S^-$", "$C^*$"])
+        # Step 5: Update Rankings
+        cs_order = self.rank_according_to(self.separation_measures[2])
+        return cs_order
+    
+    def print_results(self):
+        cs_order = self.get_rankings()
+        cs_scores = self.separation_measures[2]  # Assuming the third element is C*
+        
+        if cs_order.size > 0:
+            print("Rankings and Scores:")
+            for i, truck_id in enumerate(cs_order):
+                print(f"{i+1}. Truck ID: {truck_id}, Score: {cs_scores[np.where(self.candidates == truck_id)][0]:.3f}")
+        else:
+            print("No candidates available for ranking.")
 
 
-#############################################################
-#             Ranking the candidates/alternatives           #
-#############################################################
-def rank_according_to(data):
-    ranks = rankdata(data).astype(int)
-    ranks -= 1
-    return candidates[ranks][::-1]
 
-cs_order = rank_according_to(cs)
-sp_order = rank_according_to(sp)
-sn_order = rank_according_to(sn)
+#############################
+#         TESTING           #
+#############################
 
-pd.DataFrame(data=zip(cs_order, sp_order, sn_order), index=range(1, m + 1), columns=["$C^*$", "$S^*$", "$S^-$"])
+# Load and truck data from algorithm.py
+load = {
+    'seq': 51,
+    'type': 'Load',
+    'timestamp': '2023-11-17T08:55:55', 
+    'loadId': 40022,
+    'originLatitude': 29.9561,
+    'originLongitude': -90.0773, 
+    'destinationLatitude': 33.6821,
+    'destinationLongitude': -84.1488, 
+    'equipmentType': 'Flatbed',
+    'price': 1000.0,
+    'mileage': 480.0
+}
 
-#############################################################
-#                      Printing Results                     #
-#############################################################
-print("The best candidate/alternative according to C* is " + cs_order[0])
-print("The preferences in descending order are " + ", ".join(cs_order) + ".")
+truck_data = [
+    {'seq': 52, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 189, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 53, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 201, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 54, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 301, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'},
+    {'seq': 55, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 401, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Short'},
+    {'seq': 56, 'type': 'Truck', 'timestamp': '2023-11-17T08:56:37', 'truckId': 501, 'positionLatitude': 40.37152862548828, 'positionLongitude': -76.68165588378906, 'equipType': 'Reefer', 'nextTripLengthPreference': 'Long'}
+]
+
+# Create an instance of RankingSystem
+ranking_system = RankingSystem(load, truck_data)
+
+# Print the results
+ranking_system.print_results()
+
+# New truck data example
+new_truck = {
+    'seq': 57, 
+    'type': 'Truck', 
+    'timestamp': '2023-11-18T09:00:00', 
+    'truckId': 601, 
+    'positionLatitude': 41.8781, 
+    'positionLongitude': -87.6298, 
+    'equipType': 'Flatbed', 
+    'nextTripLengthPreference': 'Long'
+}
+
+# Call the add_new_truck_and_rank method
+updated_rankings = ranking_system.add_new_truck_and_rank(new_truck)
+
+# Print the updated rankings
+print("Updated Rankings and Scores:")
+for i, truck_id in enumerate(updated_rankings):
+    score = ranking_system.separation_measures[2][np.where(ranking_system.candidates == truck_id)][0]
+    print(f"{i+1}. Truck ID: {truck_id}, Score: {score:.3f}")
