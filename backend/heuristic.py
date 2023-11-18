@@ -18,6 +18,8 @@ class Heuristic:
         """Calculates a simple heuristic score for given truck."""
         score = 0
         score += self.calculate_profit_score(self.truck)
+        if score <= 0:
+            return 0
         score += self.trip_length_preference_score(self.truck)
         score += self.idle_time_score(self.truck)
         return score
@@ -27,8 +29,6 @@ class Heuristic:
         # Profit calculation
         distance_in_miles = ((Heuristic.bird_fly_distance(self.truck['positionLatitude'], self.truck['positionLongitude'], self.load['originLatitude'], self.load['originLongitude'])) * 0.000621371)
         profit = self.load['price'] - (self.load['mileage'] * 1.38) - (distance_in_miles*1.38)
-        print("Profit:",profit)
-        print("Distance:",distance_in_miles)
         return profit / 1000  # Scale down the profit for scoring
 
     def trip_length_preference_score(self, truck):

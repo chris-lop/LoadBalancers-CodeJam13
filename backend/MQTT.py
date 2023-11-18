@@ -24,10 +24,6 @@ def on_message(client, userdata, msg):
         init_truck(payload)
     elif(payload["type"] == "Load"):
         init_load(payload)
-        load_id = payload["loadId"]
-        for truck in loads[load_id]["potentialTrucks"]:
-            h_instance = Heuristic(loads[load_id], truck)
-            print(h_instance.get_score())      
     else:
         print("Unknown type: " + payload["type"])
 
@@ -38,11 +34,10 @@ def init_truck(payload):
         trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"]}
 
 def init_load(payload):
-    print("new load")
     load_id = payload["loadId"]
     # {'seq': 51, 'type': 'Load', 'timestamp': '2023-11-17T08:55:55', 'loadId': 40022, 'originLatitude': 29.9561, 'originLongitude': -90.0773, 'destinationLatitude': 33.6821, 'destinationLongitude': -84.1488, 'equipmentType': 'Flatbed', 'price': 1000.0, 'mileage': 480.0}
     if(load_id not in loads):
-        loads[load_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "originLatitude": payload["originLatitude"], "originLongitude": payload["originLongitude"], "destinationLatitude": payload["destinationLatitude"], "destinationLongitude": payload["destinationLongitude"], "equipmentType": payload["equipmentType"], "price": payload["price"], "mileage": payload["mileage"], "potentialTrucks":[]}
+        loads[load_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "originLatitude": payload["originLatitude"], "originLongitude": payload["originLongitude"], "destinationLatitude": payload["destinationLatitude"], "destinationLongitude": payload["destinationLongitude"], "equipmentType": payload["equipmentType"], "price": payload["price"], "mileage": payload["mileage"], "potentialTrucks":{}}
     dists = []
     for truck_id, truck in trucks.items():
         #Only push in heap compatible trucks (size) -> don't bother calculating the rest
@@ -52,39 +47,51 @@ def init_load(payload):
         heapq.heappush(dists, (distance, truck_id))    
     # get 50 closest trucks
     for i in range(50):
-        if len(dists) == 0 or len(loads[load_id]["potentialTrucks"]) >= 50:
+        if len(dists) == 0 or len(loads[load_id]["potentialTrucks"]) >= 20:
             break
         truck_id = heapq.heappop(dists)[1]
-        loads[load_id]["potentialTrucks"].append(trucks[truck_id])
+        loads[load_id]["potentialTrucks"][truck_id] = -1
     # get real distance between truck and load
     start_time = time.time()
     print("start init_load with " + str(len(loads[load_id]["potentialTrucks"])) + " trucks")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future_list = []
-        for truck in loads[load_id]["potentialTrucks"]:
+        for truck_id in loads[load_id]["potentialTrucks"].keys():
             future = executor.submit(
                         calculate_distance,
-                        truck['positionLatitude'],
-                        truck["positionLongitude"],
+                        trucks[truck_id]['positionLatitude'],
+                        trucks[truck_id]["positionLongitude"],
                         payload['originLatitude'],
                         payload["originLongitude"]
                     )
             future_list.append(future)
-
     # Wait for all threads to finish
     concurrent.futures.wait(future_list)
     # Get the results
-    for i, truck in enumerate(loads[load_id]["potentialTrucks"]):
-        truck['distance'] = future_list[i].result()
-    # print distance
-    for truck in loads[load_id]["potentialTrucks"]:
-        print(truck['distance'], "meters")
-
+    for i, truck_id in enumerate(loads[load_id]["potentialTrucks"].keys()):
+        loads[load_id]["potentialTrucks"][truck_id] = future_list[i].result()
+    notify_truck(load_id)
     end_time = time.time()  # end timer
-
     elapsed_time = end_time - start_time
-    
-    print("end init_load in " + str(elapsed_time) + " seconds")
+    print("end init_load in " + str(elapsed_time) + " seconds for " + str(len(loads[load_id]["potentialTrucks"])) + " trucks")
+
+def notify_truck(load_id):
+    scores = {}
+    load = loads[load_id]
+    truck_ids = load["potentialTrucks"].keys()
+    # calculate score for each truck
+    for truck_id in truck_ids:
+        h = Heuristic(load,trucks[truck_id])
+        scores[truck_id] = h.get_score()
+    # sort trucks by score
+    truck_ids = sorted(truck_ids, key=lambda x: scores[x], reverse=True)
+    # notify scores > 0
+    for i in truck_ids:
+        if scores[i] > 0:
+            print("Truck " + str(i) + " notified with score " + str(scores[i]))
+        else:
+            break
+
 
 def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
     # Radius of the Earth in meters
