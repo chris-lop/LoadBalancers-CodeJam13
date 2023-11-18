@@ -91,7 +91,7 @@ class RankingSystem:
             sp[i] = np.linalg.norm(diff_pos)
             sn[i] = np.linalg.norm(diff_neg)
             cs[i] = sn[i] / (sp[i] + sn[i])
-        return sp, sn, cs
+        return [sp, sn, cs]  # Return as a list
     
     def get_load_trip_length(self, load):
         return 1 if load['mileage'] >= 200 else 0
@@ -107,6 +107,38 @@ class RankingSystem:
         ranks = rankdata(-data, method='max').astype(int)
         sorted_indices = np.argsort(-data)  # Sort indices in descending order of data
         return self.candidates[sorted_indices]
+    
+    def add_new_truck_and_rank(self, new_truck):
+        # Step 1: Add New Truck Data
+        new_truck_data = np.array([self.calculate_profit(new_truck),
+                                   self.trip_length_preference_match(new_truck),
+                                   self.calculate_idle_time(new_truck)])
+        self.raw_data = np.vstack([self.raw_data, new_truck_data])
+        self.candidates = np.append(self.candidates, new_truck['truckId'])
+
+        # Step 2: Update Normalized and Weighted Normalized Data
+        divisors = np.linalg.norm(self.raw_data, axis=0)
+        self.normalized_data = self.raw_data / divisors
+        self.weighted_normalized_data = self.normalized_data * self.weights
+
+        # Step 3: Update PIS and NIS
+        self.a_pos, self.a_neg = self.identify_pis_nis()
+
+        # Step 4: Calculate Separation Measures for the New Truck
+        new_truck_index = len(self.weighted_normalized_data) - 1
+        diff_pos = self.weighted_normalized_data[new_truck_index] - self.a_pos
+        diff_neg = self.weighted_normalized_data[new_truck_index] - self.a_neg
+        sp = np.linalg.norm(diff_pos)
+        sn = np.linalg.norm(diff_neg)
+        cs = sn / (sp + sn)
+        # Update separation measures
+        self.separation_measures[0] = np.append(self.separation_measures[0], sp)
+        self.separation_measures[1] = np.append(self.separation_measures[1], sn)
+        self.separation_measures[2] = np.append(self.separation_measures[2], cs)
+
+        # Step 5: Update Rankings
+        cs_order = self.rank_according_to(self.separation_measures[2])
+        return cs_order
     
     def print_results(self):
         cs_order = self.get_rankings()
@@ -153,3 +185,24 @@ ranking_system = RankingSystem(load, truck_data)
 
 # Print the results
 ranking_system.print_results()
+
+# New truck data example
+new_truck = {
+    'seq': 57, 
+    'type': 'Truck', 
+    'timestamp': '2023-11-18T09:00:00', 
+    'truckId': 601, 
+    'positionLatitude': 41.8781, 
+    'positionLongitude': -87.6298, 
+    'equipType': 'Flatbed', 
+    'nextTripLengthPreference': 'Long'
+}
+
+# Call the add_new_truck_and_rank method
+updated_rankings = ranking_system.add_new_truck_and_rank(new_truck)
+
+# Print the updated rankings
+print("Updated Rankings and Scores:")
+for i, truck_id in enumerate(updated_rankings):
+    score = ranking_system.separation_measures[2][np.where(ranking_system.candidates == truck_id)][0]
+    print(f"{i+1}. Truck ID: {truck_id}, Score: {score:.3f}")
