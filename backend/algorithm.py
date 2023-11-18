@@ -1,6 +1,7 @@
 import numpy as np               # for linear algebra
 import pandas as pd              # for tabular output
 from scipy.stats import rankdata # for ranking the candidates
+import random  # Import the random module
 
 class RankingSystem:
     """
@@ -44,8 +45,10 @@ class RankingSystem:
 
     def calculate_profit(self, truck):
         """Calculate the profit for a truck."""
-        # TODO: Add deadhead to profit function
-        return self.load['price'] - self.load['mileage'] * 1.38
+        # TODO: Add deadhead to profit function, for now random
+        random_deadhead = (random.randint(1, 100) * 1.38)
+
+        return self.load['price'] - (self.load['mileage'] * 1.38) - (random_deadhead)
 
     def trip_length_preference_match(self, truck):
         """Check if the truck's trip length preference matches the load's trip length."""
@@ -107,9 +110,12 @@ class RankingSystem:
     
     def print_results(self):
         cs_order = self.get_rankings()
+        cs_scores = self.separation_measures[2]  # Assuming the third element is C*
+        
         if cs_order.size > 0:
-            print("The best candidate/alternative according to C* is " + str(cs_order[0]))
-            print("The preferences in descending order are " + ", ".join(map(str, cs_order)) + ".")
+            print("Rankings and Scores:")
+            for i, truck_id in enumerate(cs_order):
+                print(f"{i+1}. Truck ID: {truck_id}, Score: {cs_scores[np.where(self.candidates == truck_id)][0]:.3f}")
         else:
             print("No candidates available for ranking.")
 
