@@ -7,6 +7,7 @@ import math
 import time 
 import heapq
 from heuristic import Heuristic
+import concurrent.futures
 
 load_dotenv() 
 trucks = {}
@@ -19,7 +20,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
 #     # send truck events to truck function
     payload = json.loads(msg.payload.decode())
-    print(payload)
     if(payload["type"] == "Truck"):
         init_truck(payload)
     elif(payload["type"] == "Load"):
@@ -38,7 +38,7 @@ def init_truck(payload):
         trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"]}
 
 def init_load(payload):
-    start_time = time.time()
+    print("new load")
     load_id = payload["loadId"]
     # {'seq': 51, 'type': 'Load', 'timestamp': '2023-11-17T08:55:55', 'loadId': 40022, 'originLatitude': 29.9561, 'originLongitude': -90.0773, 'destinationLatitude': 33.6821, 'destinationLongitude': -84.1488, 'equipmentType': 'Flatbed', 'price': 1000.0, 'mileage': 480.0}
     if(load_id not in loads):
@@ -50,33 +50,41 @@ def init_load(payload):
             continue
         distance = bird_fly_distance(truck['positionLatitude'], truck["positionLongitude"], payload['originLatitude'], payload["originLongitude"])
         heapq.heappush(dists, (distance, truck_id))    
-    # print 50 closest trucks and tie all potential trucks to load
+    # get 50 closest trucks
     for i in range(50):
-        if len(dists) == 0:
+        if len(dists) == 0 or len(loads[load_id]["potentialTrucks"]) >= 50:
             break
         truck_id = heapq.heappop(dists)[1]
         loads[load_id]["potentialTrucks"].append(trucks[truck_id])
-    #Add to the load a list of all potential trucks
+    # get real distance between truck and load
+    start_time = time.time()
+    print("start init_load with " + str(len(loads[load_id]["potentialTrucks"])) + " trucks")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_list = []
+        for truck in loads[load_id]["potentialTrucks"]:
+            future = executor.submit(
+                        calculate_distance,
+                        truck['positionLatitude'],
+                        truck["positionLongitude"],
+                        payload['originLatitude'],
+                        payload["originLongitude"]
+                    )
+            future_list.append(future)
 
-    #     score = calculate_score(trucks[truck_id], loads[load_id])
-    #     print(f"Truck {truck_id} has a score of {score}")
-    # end_time = time.time()  # end timer
-    # elapsed_time = end_time - start_time
+    # Wait for all threads to finish
+    concurrent.futures.wait(future_list)
+    # Get the results
+    for i, truck in enumerate(loads[load_id]["potentialTrucks"]):
+        truck['distance'] = future_list[i].result()
+    # print distance
+    for truck in loads[load_id]["potentialTrucks"]:
+        print(truck['distance'], "meters")
+
+    end_time = time.time()  # end timer
+
+    elapsed_time = end_time - start_time
     
-#     #print("end init_load in " + str(elapsed_time) + " seconds")
-
-# def calculate_score(truck, load):
-#     score = 0
-#     # Add to the score if the equipment types match
-#     if truck['equipType'] == load['equipmentType']:
-#         score += 1
-#     # Subtract from the score based on the distance between the truck and the load
-#     score -= calculate_distance(truck['positionLatitude'], truck["positionLongitude"], load['originLatitude'], load["originLongitude"]) / 1000
-#     # Add to the score if the load's mileage fits within the truck's trip length preference
-#     if (truck['nextTripLengthPreference'] == 'Short' and load['mileage'] < 200) or \
-#        (truck['nextTripLengthPreference'] == 'Long' and load['mileage'] >= 200):
-#         score += 1
-#     return score
+    print("end init_load in " + str(elapsed_time) + " seconds")
 
 def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
     # Radius of the Earth in meters
@@ -98,33 +106,30 @@ def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
 
     return distance
 
-# def calculate_distance(truck_lat, truck_long, load_lat, load_long):
-#     api_key = os.getenv('GOOGLE_API_KEY')
-#     url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={truck_lat},{truck_long}&destinations={load_lat},{load_long}&key={api_key}'
+def calculate_distance(truck_lat, truck_long, load_lat, load_long):
+    api_key = os.getenv('GOOGLE_API_KEY')
+    url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={truck_lat},{truck_long}&destinations={load_lat},{load_long}&key={api_key}'
     
-#     response = requests.get(url)
-#     data = json.loads(response.text)
-#     #print(data)
-#     if 'rows' in data and 'elements' in data['rows'][0] and 'distance' in data['rows'][0]['elements'][0]:
-#         return data['rows'][0]['elements'][0]['distance']['value']
-#     else:
-#         return None
-
-# def notify_trucker(truck_id, load_id):
-#     print(f'Notify truck {truck_id} about load {load_id}')
+    response = requests.get(url)
+    data = json.loads(response.text)
+    #print(data)
+    if 'rows' in data and 'elements' in data['rows'][0] and 'distance' in data['rows'][0]['elements'][0]:
+        return data['rows'][0]['elements'][0]['distance']['value']
+    else:
+        raise Exception("Error in calculating distance")
 
 client = mqtt.Client(client_id="LoadBalancers01")
 client.username_pw_set("CodeJamUser", "123CodeJam")
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect("fortuitous-welder.cloudmqtt.com", 1883, 60)
-#client.loop_forever()
+client.loop_forever()
 # Run the loop for 12.5 seconds (1 hour simulation time)
-timeout = 12.5
-start_time = time.time()
+#timeout = 12.5
+#start_time = time.time()
 
-while time.time() - start_time < timeout:
-    client.loop()
+#while time.time() - start_time < timeout:
+#    client.loop()
 
 # Clean up and disconnect
 client.disconnect()
