@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+import json
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -6,8 +7,11 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     # send truck events to truck function
-    
-    print(msg.topic+" "+str(msg.payload))
+    payload = json.loads(msg.payload.decode())
+    print(payload)
+    if(payload["type"] == "truck"):
+        init_truck()
+    #print(msg.topic+" "+str(msg.payload))
 
 def init_truck():
     # initialize truck
