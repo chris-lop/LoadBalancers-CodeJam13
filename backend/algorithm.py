@@ -32,17 +32,31 @@ class RankingSystem:
     #------------------------#
     def initialize_raw_data(self):
         """Initializes raw data from truck data."""
-        load_trip_length = self.get_load_trip_length(self.load)
-        trucker_preferences = {
-            trucker['truckId']: 1 if trucker['nextTripLengthPreference'] == 'Long' else 0
-            for trucker in self.truck_data
-        }
-        raw_data = np.array([truck['attributes'] for truck in self.truck_data])  # Replace 'attributes' with actual data structure key
-        for i in range(len(self.candidates)):
-            trucker_id = self.candidates[i]
-            preference_match = 1 if trucker_preferences[trucker_id] == load_trip_length else 0
-            raw_data[i][1] = preference_match
+        raw_data = np.zeros((len(self.truck_data), len(self.attributes)))
+
+        for i, truck in enumerate(self.truck_data):
+            # Calculate each attribute
+            raw_data[i][0] = self.calculate_profit(truck)  # Profit
+            raw_data[i][1] = self.trip_length_preference_match(truck)  # TripLengthPreference Match
+            raw_data[i][2] = self.calculate_idle_time(truck)  # Idle Time
+
         return raw_data
+
+    def calculate_profit(self, truck):
+        """Calculate the profit for a truck."""
+        # TODO: Add deadhead to profit function
+        return self.load['price'] - self.load['mileage'] * 1.38
+
+    def trip_length_preference_match(self, truck):
+        """Check if the truck's trip length preference matches the load's trip length."""
+        load_trip_length = self.get_load_trip_length(self.load)
+        preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
+        return 1 if preference == load_trip_length else 0
+
+    def calculate_idle_time(self, truck):
+        """Calculate idle time (dummy function for now)."""
+        # TODO: Calculate idle time correctly
+        return 0.1
 
     def normalize_ratings(self):
         """Normalizes ratings for each attribute."""
@@ -85,9 +99,11 @@ class RankingSystem:
         return cs_order
     
     def rank_according_to(self, data):
-        ranks = rankdata(data).astype(int)
-        ranks -= 1
-        return self.candidates[ranks][::-1]
+        # Rank in descending order, highest value gets rank 1
+        # 'max' method assigns the highest rank to all tied elements
+        ranks = rankdata(-data, method='max').astype(int)
+        sorted_indices = np.argsort(-data)  # Sort indices in descending order of data
+        return self.candidates[sorted_indices]
     
     def print_results(self):
         cs_order = self.get_rankings()
