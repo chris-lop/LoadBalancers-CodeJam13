@@ -1,6 +1,6 @@
 <template>
-  <div class="text-3xl">
-    Hello
+  <div class="pl-5">
+    <Button severity="warning">Login</Button>
   </div>
 </template>
 
