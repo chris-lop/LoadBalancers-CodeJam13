@@ -1,5 +1,7 @@
+from datetime import datetime
 import os
 import json
+import random
 import requests
 from dotenv import load_dotenv
 import math
@@ -16,27 +18,43 @@ load_dotenv()
 trucks = {}
 loads = {}
 
+latestTimestamp = ""
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("CodeJam")
 
 def on_message(client, topic, payload, qos, properties):
-#     # send truck events to truck function
+    # send truck events to truck function
     payload = json.loads(payload.decode())
+    global latestTimestamp 
+    latestTimestamp = payload["timestamp"]
     if(payload["type"] == "Truck"):
         init_truck(payload)
-        
+        print("Truck " + str(payload["truckId"]) + " updated")
     elif(payload["type"] == "Load"):
         init_load(payload)
+    elif(payload["type"] == "End"):
+        print("End")
+        end_day()
+    elif(payload["type"] == "Start"):
+        print("Start")
+
     else:
         print("Unknown type: " + payload["type"])
+
+def end_day():
+    loads.clear()
+    trucks.clear()
+    # clear redis
+    store.redis.flushall()
 
 def init_truck(payload):
     truck_id = payload["truckId"]
     if(truck_id not in trucks):
-        print("New truck: " + str(truck_id))
         #{'seq': 2140, 'type': 'Truck', 'timestamp': '2023-11-17T20:03:18', 'truckId': 104, 'positionLatitude': 40.84517288208008, 'positionLongitude': -73.91064453125, 'equipType': 'Van', 'nextTripLengthPreference': 'Long'}
-        trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"]}
+        trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"], "latestNotification": payload["timestamp"]}
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps({"positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"]}))
 
 def init_load(payload):
     load_id = payload["loadId"]
@@ -86,13 +104,15 @@ def notify_truck(load_id):
     truck_ids = load["potentialTrucks"].keys()
     # calculate score for each truck
     for truck_id in truck_ids:
-        scores[truck_id] = get_score(load, trucks[truck_id])
+        scores[truck_id] = get_score(load, trucks[truck_id], loads, latestTimestamp)
     # sort trucks by score
     truck_ids = sorted(truck_ids, key=lambda x: scores[x], reverse=True)
     # notify scores > 0
     for i in truck_ids:
         if scores[i] > 0:
             store.set_data(i, scores[i])
+            # set to current timestamp
+            trucks[i]["latestNotification"] = latestTimestamp
             #print("Truck " + str(i) + " notified with score " + str(scores[i]))
         else:
             break
@@ -119,14 +139,14 @@ def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
     return distance
 
 def calculate_distance(truck_lat, truck_long, load_lat, load_long):
+    return random.randint(0, 1000)
     api_key = os.getenv('GOOGLE_API_KEY')
     url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={truck_lat},{truck_long}&destinations={load_lat},{load_long}&key={api_key}'
     
     response = requests.get(url)
     data = json.loads(response.text)
-    #print(data)
     if 'rows' in data and 'elements' in data['rows'][0] and 'distance' in data['rows'][0]['elements'][0]:
-        return data['rows'][0]['elements'][0]['distance']['value']
+        return data['rows'][0]['elements'][0]['distance']['text'].split(' ')[0]
     else:
         raise Exception("Error in calculating distance")
 

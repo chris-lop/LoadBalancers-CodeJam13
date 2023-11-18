@@ -1,6 +1,7 @@
 from fastapi import Query, HTTPException, APIRouter
+from redis_store import store
 import random
-
+import json
 '''
 Earnings overview
 Earnings Breadkown by Load
@@ -44,32 +45,20 @@ LOAD
 }
 '''
 router = APIRouter()
-
-@router.get("/metrics", tags=["metrics"])
-async def get_metrics():
+@router.get("/metrics/{truck_id}", tags=["metrics"])
+async def get_metrics(truck_id: str):
     # Randomly generate values for the specified metrics
-    metrics_data = {
-        'earnings_overview': round(random.uniform(1000, 5000), 2),
-        'earnings_breakdown_by_load': {f'load_{i}': round(random.uniform(100, 500), 2) for i in range(1, 6)},
-        'mileage_log': round(random.uniform(5000, 20000), 2),
-        'fuel_efficiency': round(random.uniform(5, 10), 2),
-        'load_acceptance_rate': round(random.uniform(0.5, 1.0), 2),
-        'deadhead_analysis': round(random.uniform(100, 500), 2),
-        'average_trip_duration': round(random.uniform(5, 15), 2),
-        'idle_time': round(random.uniform(1, 5), 2),
-        'load_rejection_analysis': {
-            'unfavorable_route': round(random.uniform(0, 1), 2),
-            'low_payment': round(random.uniform(0, 1), 2),
-            'equipment_mismatch': round(random.uniform(0, 1), 2)
-        },
-        'destination_preferences': {
-            'destination_A': round(random.uniform(0, 1), 2),
-            'destination_B': round(random.uniform(0, 1), 2),
-            'destination_C': round(random.uniform(0, 1), 2),
-        },
-        'incident_reports': round(random.uniform(0, 1), 2),
-        'notification_response_time': round(random.uniform(1, 5), 2),
-        'feedback': round(random.uniform(0, 1), 2),
-    }
-
+    print("Getting metrics for truck " + str(truck_id))
+    metrics_data = store.get_data("truck_metrics_" + str(truck_id))
+    # metrics_Data should be a dict
+    
+    if(metrics_data is None):
+        raise HTTPException(status_code=404, detail="Truck not found")
+    metrics_data = json.loads(metrics_data)
+    if("earnings" not in metrics_data):
+        metrics_data["earnings"] = random.randint(0, 4000)
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
+    if("mileage" not in metrics_data):
+        metrics_data["mileage"] = random.randint(0, 10000)
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps(metrics_data))
     return metrics_data
