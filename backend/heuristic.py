@@ -68,7 +68,7 @@ def get_score(load, truck, load_list, timestamp, distance):
     latestTimestamp = timestamp
     load_list = load_list.values()
     weighted_score = 0
-    profit_score =  calculate_profit_score(load, truck, data, distance*0.621371) * 0.5
+    profit_score =  calculate_profit_score(load, truck, data, distance)
     weighted_score += profit_score
     # Do not evaluate unprofitable loads
     if weighted_score <= 0:
@@ -76,22 +76,22 @@ def get_score(load, truck, load_list, timestamp, distance):
         return data
     # Check for cluster proximity if there is more than 5 available loads
     if (len(load_list) >= 5):
-        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.2
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.05
         weighted_score += trip_length_pref_score
-        idle_score = idle_time_score(load, truck) * 0.2
+        idle_score = idle_time_score(load, truck) * 0.4
         weighted_score += idle_score
         before = weighted_score
         cluster_prox_score = cluster_proximity_score(truck, load, load_list) * 0.2
         weighted_score += cluster_prox_score
         #print("prox: " , weighted_score - before)
-        print("profit: ", profit_score * 100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100, "prox: ", cluster_prox_score*100)
+        #print("profit: ", profit_score * 100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100, "prox: ", cluster_prox_score*100)
 
     else:
-        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.3
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.01
         weighted_score += trip_length_pref_score
-        idle_score = idle_time_score(load, truck) * 0.2
+        idle_score = idle_time_score(load, truck) * 0.4
         weighted_score += idle_score
-        print("profit: ", profit_score*100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100)
+        #print("profit: ", profit_score*100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100)
 
     
     data["score"] = weighted_score
@@ -140,5 +140,6 @@ def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
 
     # Distance in meters
     distance = R * c
-
+    # convert to miles
+    distance = distance * 0.000621371   
     return distance
