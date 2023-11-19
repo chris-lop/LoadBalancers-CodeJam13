@@ -4,14 +4,14 @@
       <!-- Left Section -->
       <div class="p-6 text-center md:text-left flex items-center">
         <section>
-          <span class="text-orange-500 block text-5xl font-bold mb-1">Create the screens your</span>
-          <div class="text-5xl text-primary font-bold mb-3">visitors deserve to see</div>
+          <span class="text-orange-500 block text-5xl font-bold mb-1">LoadBalancer</span>
+          <div class="text-5xl text-primary font-bold mb-3">helping truckers find their true match</div>
           <p class="mt-0 mb-4 text-700 line-height-3">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Maximize your profits based on your interests!
           </p>
 
           <Button label="Login" type="button" class="mr-3 p-button-raised white-fill-button"></Button>
-          <Button label="Live Demo" type="button" class="p-button-outlined white-outline-button"></Button>
+          <Button label="Register" type="button" class="p-button-outlined white-outline-button"></Button>
         </section>
       </div>
 
@@ -49,10 +49,9 @@
           </span>
 
           <!-- Feature Title -->
-          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 1</div>
+          <div class="text-900 text-xl mb-3 font-medium">Real time updates</div>
 
           <!-- Feature Description -->
-          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 1 goes here.</span>
         </div>
 
         <!-- Repeat the structure for other features -->
@@ -63,8 +62,7 @@
           <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-primary rounded-lg" style="border-radius: 10px">
             <Button icon="pi pi-check" class="white-fill-button"></Button>
           </span>
-          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 2</div>
-          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 2 goes here.</span>
+          <div class="text-900 text-xl mb-3 font-medium">Personalised load matching</div>
         </div>
 
         <!-- Feature Details 3 -->
@@ -72,8 +70,7 @@
           <span class="p-3 shadow-lg mb-3 inline-block surface-card bg-primary rounded-lg" style="border-radius: 10px">
             <Button icon="pi pi-check" class="white-fill-button"></Button>
           </span>
-          <div class="text-900 text-xl mb-3 font-medium">Awesome Feature 3</div>
-          <span class="text-700 line-height-3 text-white">Description of Awesome Feature 3 goes here.</span>
+          <div class="text-900 text-xl mb-3 font-medium">Advanced technology integration</div>
         </div>
       </div>
     </div>
