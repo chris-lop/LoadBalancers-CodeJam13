@@ -54,7 +54,7 @@ def cluster_proximity_score(truck, load, load_list):
         score = 1 / (1 + np.log1p(truck_distance + load_destination_distance))
 
     # Scale the score to a desired range, e.g., between 0 and 1
-    scaled_score = min(score, 1) * 10
+    scaled_score = min(score, 1) / 10
 
     return scaled_score
 
@@ -81,7 +81,7 @@ def get_score(load, truck, load_list, timestamp, distance):
         idle_score = idle_time_score(load, truck) * 0.2
         weighted_score += idle_score
         before = weighted_score
-        cluster_prox_score = cluster_proximity_score(truck, load, load_list) * 0.1
+        cluster_prox_score = cluster_proximity_score(truck, load, load_list) * 0.2
         weighted_score += cluster_prox_score
         #print("prox: " , weighted_score - before)
         print("profit: ", profit_score * 100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100, "prox: ", cluster_prox_score*100)

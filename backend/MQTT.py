@@ -109,36 +109,38 @@ def notify_truck(load_id):
     # sort trucks by score
     truck_ids = sorted(truck_ids, key=lambda x: scores[x]["score"], reverse=True)
     # notify scores > 0
+    added = 0
     for i in truck_ids:
-        scores[i]["score"]
-        if scores[i]["score"] > 0:
-            # add timestamp to scores, 
-            scores[i]["timestamp"] = latestTimestamp
-            # add loadId to scores
-            scores[i]["loadId"] = load_id
-            # add origin and destination to scores
-            scores[i]["originLatitude"] = load["originLatitude"]
-            scores[i]["originLongitude"] = load["originLongitude"]
-            scores[i]["destinationLatitude"] = load["destinationLatitude"]
-            scores[i]["destinationLongitude"] = load["destinationLongitude"]
-            # add distance to scores
-            scores[i]["mileage"] = load["mileage"]
-            # set to current timestamp
-            trucks[i]["latestNotification"] = latestTimestamp
-            if len(trucks[i]["latestLoads"]) >= 5:
-                trucks[i]["latestLoads"].pop(0)
-            # insert at beginning
-            trucks[i]["latestLoads"].insert(0, scores[i])
-            store.set_data(i, json.dumps(scores[i]))
-            # edit truck metrics
-            metrics_data = store.get_data("truck_metrics_" + str(i))
-            metrics_data = json.loads(metrics_data)
-            metrics_data["latestNotification"] = latestTimestamp
-            if len(metrics_data["latestLoads"]) >= 5:
-                metrics_data["latestLoads"].pop(0)
-            metrics_data["latestLoads"].insert(0, scores[i])
-            store.set_data("truck_metrics_" + str(i), json.dumps(metrics_data))
-            #print("Truck " + str(i) + " notified with score " + str(scores[i]))
+        if added <= 10:
+            if scores[i]["score"] > 0:
+                added += 1
+                # add timestamp to scores, 
+                scores[i]["timestamp"] = latestTimestamp
+                # add loadId to scores
+                scores[i]["loadId"] = load_id
+                # add origin and destination to scores
+                scores[i]["originLatitude"] = load["originLatitude"]
+                scores[i]["originLongitude"] = load["originLongitude"]
+                scores[i]["destinationLatitude"] = load["destinationLatitude"]
+                scores[i]["destinationLongitude"] = load["destinationLongitude"]
+                # add distance to scores
+                scores[i]["mileage"] = load["mileage"]
+                # set to current timestamp
+                trucks[i]["latestNotification"] = latestTimestamp
+                if len(trucks[i]["latestLoads"]) >= 5:
+                    trucks[i]["latestLoads"].pop(0)
+                # insert at beginning
+                trucks[i]["latestLoads"].insert(0, scores[i])
+                store.set_data(i, json.dumps(scores[i]))
+                # edit truck metrics
+                metrics_data = store.get_data("truck_metrics_" + str(i))
+                metrics_data = json.loads(metrics_data)
+                metrics_data["latestNotification"] = latestTimestamp
+                if len(metrics_data["latestLoads"]) >= 5:
+                    metrics_data["latestLoads"].pop(0)
+                metrics_data["latestLoads"].insert(0, scores[i])
+                store.set_data("truck_metrics_" + str(i), json.dumps(metrics_data))
+                #print("Truck " + str(i) + " notified with score " + str(scores[i]))
         else:
             break
 
