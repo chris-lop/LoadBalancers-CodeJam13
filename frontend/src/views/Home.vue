@@ -92,7 +92,19 @@
     </div>
   </Container>
 </template>
-
+<script>
+import Container from "@/components/Container.vue";
+export default {
+  name: "Home",
+  components: {
+    Container,
+  },
+  data() {
+    return {};
+  },
+  methods: {},
+};
+</script>
 <style>
 .white-fill-button {
   background-color: white;
