@@ -186,7 +186,7 @@ export default {
                     summary: 'New Load',
                     group: 'bc', 
                     data: data,
-                    life: 12000,               
+                    life: 6000,               
                 });
                 if(this.metrics.latestLoads.length >= 5) {
                     this.metrics.latestLoads.pop()

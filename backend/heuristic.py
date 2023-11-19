@@ -68,23 +68,34 @@ def get_score(load, truck, load_list, timestamp, distance):
     latestTimestamp = timestamp
     load_list = load_list.values()
     weighted_score = 0
-    weighted_score += calculate_profit_score(load, truck, data, distance*0.621371) * 0.5
+    profit_score =  calculate_profit_score(load, truck, data, distance*0.621371) * 0.5
+    weighted_score += profit_score
     # Do not evaluate unprofitable loads
     if weighted_score <= 0:
         data["score"] = weighted_score
         return data
     # Check for cluster proximity if there is more than 5 available loads
     if (len(load_list) >= 5):
-        weighted_score += trip_length_preference_score(load, truck) * 0.2
-        weighted_score += idle_time_score(load, truck) * 0.2
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.2
+        weighted_score += trip_length_pref_score
+        idle_score = idle_time_score(load, truck) * 0.2
+        weighted_score += idle_score
         before = weighted_score
-        weighted_score += cluster_proximity_score(truck, load, load_list) * 0.1
+        cluster_prox_score = cluster_proximity_score(truck, load, load_list) * 0.1
+        weighted_score += cluster_prox_score
         #print("prox: " , weighted_score - before)
+        print("profit: ", profit_score * 100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100, "prox: ", cluster_prox_score*100)
+
     else:
-        weighted_score += trip_length_preference_score(load, truck) * 0.3
-        weighted_score += idle_time_score(load, truck) * 0.2
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.3
+        weighted_score += trip_length_pref_score
+        idle_score = idle_time_score(load, truck) * 0.2
+        weighted_score += idle_score
+        print("profit: ", profit_score*100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100)
+
     
     data["score"] = weighted_score
+    #print each score
     return data
 
 
@@ -97,9 +108,9 @@ def calculate_profit_score(load, truck, data, distance_in_miles):
 
 def trip_length_preference_score(load, truck):
     """Scores based on trip length preference."""
-    preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
-    load_trip_length = 1 if load['mileage'] >= 200 else 0
-    return (5 if preference == load_trip_length else 0)
+    if truck['nextTripLengthPreference'] == 'Long' and load['mileage'] >= 200 or truck['nextTripLengthPreference'] == 'Short' and load['mileage'] < 200:
+        return 1
+    return 0
 
 def idle_time_score(load, truck):
     """Scores based on the difference in timestamp (idle time)."""
@@ -109,10 +120,8 @@ def idle_time_score(load, truck):
     # Calculate the absolute time difference in hours
     time_difference = abs((currTime - truck_timestamp).total_seconds() / 3600)
 
-    # Assuming a maximum idle time threshold (e.g., 48 hours)
-    max_idle_threshold = 48
     # Trucks with longer idle times get higher scores
-    return min(time_difference, max_idle_threshold) / max_idle_threshold * 5
+    return time_difference
 
 def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
     # Radius of the Earth in meters
