@@ -12,6 +12,7 @@ def cluster_loads(load_list):
     
     # Apply DBSCAN algorithm
     clustering = DBSCAN(eps=0.1, min_samples=2).fit(coordinates)  # Tune eps and min_samples as needed
+
     return coordinates, clustering.labels_
 
 def nearest_cluster_distance(truck, cluster_coords, cluster_labels):
@@ -31,25 +32,31 @@ def nearest_cluster_distance(truck, cluster_coords, cluster_labels):
 def cluster_proximity_score(truck, load, load_list):
     cluster_coords, cluster_labels = cluster_loads(load_list)
     
-    # Identify if the truck is isolated
+    # Truck's distance to the nearest cluster
     truck_distance = nearest_cluster_distance(truck, cluster_coords, cluster_labels)
-    is_isolated = truck_distance > 100  
 
+    # Load's destination distance to the nearest cluster
+    load_destination_coords = np.array([load['destinationLatitude'], load['destinationLongitude']])
+    load_destination_distance = nearest_cluster_distance({'positionLatitude': load_destination_coords[0], 'positionLongitude': load_destination_coords[1]}, cluster_coords, cluster_labels)
+
+    # Define a threshold for isolation
+    isolation_threshold = 100 * 1609.34  # This is in miles, adjust as needed
+
+    # Check if the truck is isolated
+    is_isolated = truck_distance > isolation_threshold
+
+    # Scoring logic
     if is_isolated:
-        # Calculate the distance from the load's destination to the nearest cluster
-        load_destination_coords = np.array([load['destinationLatitude'], load['destinationLongitude']])
-        min_distance_to_cluster = float('inf')
-        for label in set(cluster_labels):
-            if label != -1:  # Ignoring noise points
-                cluster_center = np.mean(cluster_coords[cluster_labels == label], axis=0)
-                distance = bird_fly_distance(load_destination_coords[0], load_destination_coords[1], cluster_center[0], cluster_center[1])
-                min_distance_to_cluster = min(min_distance_to_cluster, distance)
-
-        # Score based on proximity to the nearest cluster
-        return 1 / (1 + min_distance_to_cluster) if min_distance_to_cluster != 0 else 0
+        # High score for isolated trucks if the load's destination is near a cluster
+        score = 1 / (1 + np.log1p(load_destination_distance))
     else:
-        # For non-isolated trucks, you might return a default score or apply different logic
-        return 0
+        # Lower score for non-isolated trucks, or if load's destination is far from clusters
+        score = 1 / (1 + np.log1p(truck_distance + load_destination_distance))
+
+    # Scale the score to a desired range, e.g., between 0 and 1
+    scaled_score = min(score, 1) * 10
+
+    return scaled_score
 
 #############################
 #         HEURISTIC         #
@@ -92,7 +99,7 @@ def trip_length_preference_score(load, truck):
     """Scores based on trip length preference."""
     preference = 1 if truck['nextTripLengthPreference'] == 'Long' else 0
     load_trip_length = 1 if load['mileage'] >= 200 else 0
-    return 5 if preference == load_trip_length else 0
+    return (5 if preference == load_trip_length else 0)
 
 def idle_time_score(load, truck):
     """Scores based on the difference in timestamp (idle time)."""
