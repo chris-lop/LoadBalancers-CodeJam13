@@ -14,7 +14,7 @@
             </template>
         </Toast>
     <Container> 
-        <div class="px-10 pt-2">
+        <div class="px-10 pt-12">
             <div class="grid grid-cols-4 gap-4 pb-4">
                 <Card title="Metric 1" class="col-span-1">
                     <template #content>
@@ -235,6 +235,6 @@ export default {
 
 </script>
 
-<style>
+<style scoped>
 
 </style>

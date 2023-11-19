@@ -33,7 +33,7 @@
         <span class="text-orange-500">Many Solutions</span>
       </div>
       <div class="grid md:grid-cols-3 gap-4">
-        <!-- ... (rest of the code remains the same) ... -->
+
       </div>
     </div>
 
@@ -53,9 +53,6 @@
 
           <!-- Feature Description -->
         </div>
-
-        <!-- Repeat the structure for other features -->
-        <!-- ... (Add more features as needed) ... -->
 
         <!-- Feature Details 2 -->
         <div class="mb-4 px-5">
