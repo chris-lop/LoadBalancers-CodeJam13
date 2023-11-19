@@ -15,7 +15,6 @@
         </Toast>
     <Container> 
         <div class="px-10 pt-12 pb-4">
-        <div class="px-10 pt-12">
             <div class="grid grid-cols-4 gap-4 pb-4">
                 <Card title="Metric 1" class="col-span-1">
                     <template #content>
