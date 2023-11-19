@@ -76,7 +76,7 @@ def get_score(load, truck, load_list, timestamp, distance):
         return data
     # Check for cluster proximity if there is more than 5 available loads
     if (len(load_list) >= 5):
-        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.05
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.2
         weighted_score += trip_length_pref_score
         idle_score = idle_time_score(load, truck) * 0.4
         weighted_score += idle_score
@@ -87,7 +87,7 @@ def get_score(load, truck, load_list, timestamp, distance):
         #print("profit: ", profit_score * 100, "trip: ", trip_length_pref_score*100, "idle: ", idle_score*100, "prox: ", cluster_prox_score*100)
 
     else:
-        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.01
+        trip_length_pref_score = trip_length_preference_score(load, truck) * 0.2
         weighted_score += trip_length_pref_score
         idle_score = idle_time_score(load, truck) * 0.4
         weighted_score += idle_score

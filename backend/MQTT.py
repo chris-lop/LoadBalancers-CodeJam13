@@ -31,7 +31,7 @@ def on_message(client, topic, payload, qos, properties):
     latestTimestamp = payload["timestamp"]
     if(payload["type"] == "Truck"):
         init_truck(payload)
-        #print("Truck " + str(payload["truckId"]) + " updated")
+        print("Truck " + str(payload["truckId"]) + " updated")
     elif(payload["type"] == "Load"):
         init_load(payload)
     elif(payload["type"] == "End"):
@@ -111,11 +111,12 @@ def notify_truck(load_id):
     # notify scores > 0
     added = 0
     for i in truck_ids:
-        if added <= 10:
+        if added <= 20:
+            #print((datetime.strptime(latestTimestamp, '%Y-%m-%dT%H:%M:%S') - datetime.strptime(trucks[i]["latestNotification"], '%Y-%m-%dT%H:%M:%S')).total_seconds())
             if scores[i]["score"] > 0:
                 added += 1
                 # check if time without notification is less than 1 hour
-                if (datetime.strptime(latestTimestamp, '%Y-%m-%dT%H:%M:%S') - datetime.strptime(trucks[i]["latestNotification"], '%Y-%m-%dT%H:%M:%S')).total_seconds() < 900 and not trucks[i]["timestamp"] == trucks[i]["latestNotification"]:
+                if (datetime.strptime(latestTimestamp, '%Y-%m-%dT%H:%M:%S') - datetime.strptime(trucks[i]["latestNotification"], '%Y-%m-%dT%H:%M:%S')).total_seconds() < 1800 and not trucks[i]["timestamp"] == trucks[i]["latestNotification"]:
                     added -= 1
                     #print("Truck ", i, " notified less than 1 hour ago, skipping")
                     continue
