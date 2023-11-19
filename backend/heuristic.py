@@ -14,10 +14,6 @@ def cluster_loads(load_list):
     clustering = DBSCAN(eps=0.1, min_samples=2).fit(coordinates)  # Tune eps and min_samples as needed
     return coordinates, clustering.labels_
 
-def calculate_distance(lat1, lon1, lat2, lon2):
-    # Use the existing bird_fly_distance function
-    return bird_fly_distance(lat1, lon1, lat2, lon2)
-
 def nearest_cluster_distance(truck, cluster_coords, cluster_labels):
     truck_coords = np.array([truck['positionLatitude'], truck['positionLongitude']])
     unique_labels = set(cluster_labels)
@@ -27,7 +23,7 @@ def nearest_cluster_distance(truck, cluster_coords, cluster_labels):
         if label != -1:  # Ignoring noise points
             # Average coordinates of the cluster
             cluster_center = np.mean(cluster_coords[cluster_labels == label], axis=0)
-            distance = calculate_distance(truck_coords[0], truck_coords[1], cluster_center[0], cluster_center[1])
+            distance = bird_fly_distance(truck_coords[0], truck_coords[1], cluster_center[0], cluster_center[1])
             min_distance = min(min_distance, distance)
     
     return min_distance
@@ -46,7 +42,7 @@ def cluster_proximity_score(truck, load, load_list):
         for label in set(cluster_labels):
             if label != -1:  # Ignoring noise points
                 cluster_center = np.mean(cluster_coords[cluster_labels == label], axis=0)
-                distance = calculate_distance(load_destination_coords[0], load_destination_coords[1], cluster_center[0], cluster_center[1])
+                distance = bird_fly_distance(load_destination_coords[0], load_destination_coords[1], cluster_center[0], cluster_center[1])
                 min_distance_to_cluster = min(min_distance_to_cluster, distance)
 
         # Score based on proximity to the nearest cluster
@@ -59,15 +55,17 @@ def cluster_proximity_score(truck, load, load_list):
 #         HEURISTIC         #
 #############################
 
-def get_score(load, truck, load_list, timestamp):
+def get_score(load, truck, load_list, timestamp, distance):
+    data = {}
     global latestTimestamp
     latestTimestamp = timestamp
     load_list = load_list.values()
     weighted_score = 0
-    weighted_score += calculate_profit_score(load, truck) * 0.5
+    weighted_score += calculate_profit_score(load, truck, data, distance*0.621371) * 0.5
     # Do not evaluate unprofitable loads
     if weighted_score <= 0:
-        return 0
+        data["score"] = weighted_score
+        return data
     # Check for cluster proximity if there is more than 5 available loads
     if (len(load_list) >= 5):
         weighted_score += trip_length_preference_score(load, truck) * 0.2
@@ -78,14 +76,16 @@ def get_score(load, truck, load_list, timestamp):
     else:
         weighted_score += trip_length_preference_score(load, truck) * 0.3
         weighted_score += idle_time_score(load, truck) * 0.2
-    return weighted_score
+    
+    data["score"] = weighted_score
+    return data
 
 
-def calculate_profit_score(load, truck):
+def calculate_profit_score(load, truck, data, distance_in_miles):
     """Calculates a score based on estimated profit."""
     # Profit calculation
-    distance_in_miles = ((bird_fly_distance(truck['positionLatitude'], truck['positionLongitude'], load['originLatitude'], load['originLongitude'])) * 0.000621371)
     profit = load['price'] - (load['mileage'] * 1.38) - (distance_in_miles*1.38)
+    data["profit"] = profit
     return profit / 1000  # Scale down the profit for scoring
 
 def trip_length_preference_score(load, truck):

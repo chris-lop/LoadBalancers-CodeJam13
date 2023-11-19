@@ -53,8 +53,8 @@ def init_truck(payload):
     truck_id = payload["truckId"]
     if(truck_id not in trucks):
         #{'seq': 2140, 'type': 'Truck', 'timestamp': '2023-11-17T20:03:18', 'truckId': 104, 'positionLatitude': 40.84517288208008, 'positionLongitude': -73.91064453125, 'equipType': 'Van', 'nextTripLengthPreference': 'Long'}
-        trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"], "latestNotification": payload["timestamp"]}
-        store.set_data("truck_metrics_" + str(truck_id), json.dumps({"positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"]}))
+        trucks[truck_id] = {"seq": payload["seq"], "timestamp": payload["timestamp"], "positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"], "latestNotification": payload["timestamp"], "latestLoads": []}
+        store.set_data("truck_metrics_" + str(truck_id), json.dumps({"positionLatitude": payload["positionLatitude"], "positionLongitude": payload["positionLongitude"], "equipType": payload["equipType"], "nextTripLengthPreference": payload["nextTripLengthPreference"], "latestNotification": payload["timestamp"], "latestLoads": []}))
 
 def init_load(payload):
     load_id = payload["loadId"]
@@ -104,15 +104,39 @@ def notify_truck(load_id):
     truck_ids = load["potentialTrucks"].keys()
     # calculate score for each truck
     for truck_id in truck_ids:
-        scores[truck_id] = get_score(load, trucks[truck_id], loads, latestTimestamp)
+        distance = load["potentialTrucks"][truck_id]
+        scores[truck_id] = get_score(load, trucks[truck_id], loads, latestTimestamp, distance)
     # sort trucks by score
-    truck_ids = sorted(truck_ids, key=lambda x: scores[x], reverse=True)
+    truck_ids = sorted(truck_ids, key=lambda x: scores[x]["score"], reverse=True)
     # notify scores > 0
     for i in truck_ids:
-        if scores[i] > 0:
-            store.set_data(i, scores[i])
+        scores[i]["score"]
+        if scores[i]["score"] > 0:
+            # add timestamp to scores, 
+            scores[i]["timestamp"] = latestTimestamp
+            # add loadId to scores
+            scores[i]["loadId"] = load_id
+            # add origin and destination to scores
+            scores[i]["originLatitude"] = load["originLatitude"]
+            scores[i]["originLongitude"] = load["originLongitude"]
+            scores[i]["destinationLatitude"] = load["destinationLatitude"]
+            scores[i]["destinationLongitude"] = load["destinationLongitude"]
+            # add distance to scores
+            scores[i]["mileage"] = load["mileage"]
             # set to current timestamp
             trucks[i]["latestNotification"] = latestTimestamp
+            if len(trucks[i]["latestLoads"]) >= 5:
+                trucks[i]["latestLoads"].pop(0)
+            trucks[i]["latestLoads"].append(scores[i])
+            store.set_data(i, json.dumps(scores[i]))
+            # edit truck metrics
+            metrics_data = store.get_data("truck_metrics_" + str(i))
+            metrics_data = json.loads(metrics_data)
+            metrics_data["latestNotification"] = latestTimestamp
+            if len(metrics_data["latestLoads"]) >= 5:
+                metrics_data["latestLoads"].pop(0)
+            metrics_data["latestLoads"].append(scores[i])
+            store.set_data("truck_metrics_" + str(i), json.dumps(metrics_data))
             #print("Truck " + str(i) + " notified with score " + str(scores[i]))
         else:
             break
@@ -146,7 +170,7 @@ def calculate_distance(truck_lat, truck_long, load_lat, load_long):
     response = requests.get(url)
     data = json.loads(response.text)
     if 'rows' in data and 'elements' in data['rows'][0] and 'distance' in data['rows'][0]['elements'][0]:
-        return data['rows'][0]['elements'][0]['distance']['text'].split(' ')[0]
+        return data['rows'][0]['elements'][0]['distance']['value']/1000
     else:
         raise Exception("Error in calculating distance")
 

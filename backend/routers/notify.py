@@ -16,6 +16,7 @@ def event_generator(truck_id: str) -> Generator:
         if event is not None:
             # if new event is available, delete it from redis and yield it
             store.set_data(truck_id, "")
+            print("Sending event: " + event)
             yield f"data: {event}\n\n"
         time.sleep(1)
 
