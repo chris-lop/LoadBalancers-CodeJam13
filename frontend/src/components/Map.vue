@@ -21,13 +21,36 @@ export default {
                 const { lng, lat, zoom, secLat, secLng } = newValue;
                 if (this.map) {
                     this.firstMarker.setLngLat([lng, lat]);
-                    this.secondMarker.setLngLat([secLng, secLat]);
+                    // center map
                     this.map.flyTo({
-                        center: [secLng, secLat],
+                        center: [lng, lat],
                         essential: true,
                         duration: 2000, // Duration in milliseconds
                         zoom: 6,
                     });
+                    if (this.secondMarker === null) {
+                        if(secLat != lat && secLng != lng && secLat != 0 && secLat != 0){
+                            console.log('second marker')
+                            console.log(secLat, secLng, lat, lng)
+                            this.secondMarker = new mapboxgl.Marker({ color: 'red' })
+                        .setLngLat([secLng, secLat])
+                        .addTo(this.map);
+                        this.map.flyTo({
+                            center: [secLng, secLat],
+                            essential: true,
+                            duration: 2000, // Duration in milliseconds
+                            zoom: 7,
+                        });
+                        }
+                    } else {
+                        this.secondMarker.setLngLat([secLng, secLat]);
+                        this.map.flyTo({
+                            center: [secLng, secLat],
+                            essential: true,
+                            duration: 2000, // Duration in milliseconds
+                            zoom: 7,
+                        });
+                    }
                 }
             },
             deep: true,
@@ -42,11 +65,6 @@ export default {
             zoom: zoom,
         });
         this.firstMarker = new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map);
-        // second marker
-        this.secondMarker = new mapboxgl.Marker({ color: 'red' })
-        .setLngLat([secLng, secLat])
-        .addTo(map);
-        
         console.log('mounted')
         console.log(this.modelValue)
         this.map = map;
