@@ -14,7 +14,7 @@
             </template>
         </Toast>
     <Container> 
-        <div class="px-10 pt-16">
+        <div class="px-10 pt-2">
             <div class="grid grid-cols-4 gap-4 pb-4">
                 <Card title="Metric 1" class="col-span-1">
                     <template #content>
@@ -90,11 +90,10 @@
             <div class="grid grid-cols-2 gap-4">
                 <Card class="col-span-1">
                     <template #content>
-                        <DataTable :value="metrics.latestLoads" v-model:selection="selectedLoad" @rowSelect="onRowSelect" selectionMode="single" tableStyle="min-width: 30rem">
+                        <DataTable :value="metrics.latestLoads" v-model:selection="selectedLoad" @rowSelect="onRowSelect" selectionMode="single" tableStyle="min-width: 25rem">
                             <template #header>
                                 <div class="flex flex-wrap align-items-center justify-content-between gap-2">
                                     <span class="text-xl text-900 font-bold">Latest Loads</span>
-                                    
                                 </div>
                             </template>
                             <Column field="loadId" header="ID" sortable />
@@ -106,16 +105,6 @@
                 </Card>
                 <Card class="col-span-1">
                     <template #content>
-                        <!-- <MapboxMap
-                        style="height: 400px"
-                        :access-token=apiMapboxKey
-                        map-style="mapbox://styles/mapbox/streets-v11"
-                        :center="mapCenter"
-                        :zoom="1">
-                            <MapboxMarker :lng-lat=startingPin />
-                            <MapboxMarker :lng-lat="destinationPin" />
-                            <MapboxGeocoder :marker=false :access-token=apiMapboxKey :reverseGeocode=true />
-                        </MapboxMap> -->
                         <Map v-model="location"/>
                     </template>
                 </Card>
@@ -161,17 +150,17 @@ export default {
                 lat: 0,
                 zoom: 1,
                 bearing: 0,
-                pitch: 0
+                pitch: 0,
+                secLng: 0,
+                secLat: 0
             }
         };
     },
     async created() {
         this.getEvents()
         await this.getMetrics()
-        console.log(this.startingPin)
-        this.destinationPin = this.startingPin
-        this.mapCenter = this.startingPin
-        
+        this.location.secLat = this.location.lat
+        this.location.secLng = this.location.lng
     },
     mounted() {
 
@@ -185,7 +174,6 @@ export default {
                 console.log(this.metrics)
                 this.metrics.mileage = this.metrics.mileage.toFixed(0)
                 this.metrics.last_month_mileage = this.metrics.last_month_mileage.toFixed(0)
-                this.startingPin = [this.metrics.positionLongitude, this.metrics.positionLatitude]
                 this.location.lng = this.metrics.positionLongitude
                 this.location.lat = this.metrics.positionLatitude
                 this.metrics.latestLoads.forEach(load => {
@@ -228,11 +216,8 @@ export default {
             };
         },
         onRowSelect(event) {
-            console.log(event.data);
-            console.log(this.control)
-            this.mapCenter = [event.data.destinationLongitude, event.data.destinationLatitude]
-            this.destinationPin = [event.data.destinationLongitude, event.data.destinationLatitude]
-            this.search(String(event.data.destinationLatitude + ', ' + event.data.destinationLongitude))
+            this.location.secLat = event.data.destinationLatitude
+            this.location.secLng = event.data.destinationLongitude
         },
         search(query){
             console.log(query)
