@@ -106,7 +106,7 @@
                 </Card>
                 <Card class="col-span-1">
                     <template #content>
-                        <MapboxMap
+                        <!-- <MapboxMap
                         style="height: 400px"
                         :access-token=apiMapboxKey
                         map-style="mapbox://styles/mapbox/streets-v11"
@@ -115,7 +115,8 @@
                             <MapboxMarker :lng-lat=startingPin />
                             <MapboxMarker :lng-lat="destinationPin" />
                             <MapboxGeocoder :marker=false :access-token=apiMapboxKey :reverseGeocode=true />
-                        </MapboxMap>
+                        </MapboxMap> -->
+                        <Map v-model="location"/>
                     </template>
                 </Card>
             </div>  
@@ -129,6 +130,8 @@ import axios from 'axios';
 import { MapboxMap, MapboxMarker, MapboxGeolocateControl, MapboxGeocoder } from '@studiometa/vue-mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-geocoder/lib/mapbox-gl-geocoder.css';
+import Map from '../components/Map.vue';
+import "../../node_modules/mapbox-gl/dist/mapbox-gl.css"
 const baseUrl = import.meta.env.VITE_API_SERVER_URL;
 const mapboxKey = import.meta.env.VITE_MAP_BOX_GL;
 
@@ -140,7 +143,8 @@ export default {
         MapboxMap,
         MapboxMarker,
         MapboxGeolocateControl,
-        MapboxGeocoder
+        MapboxGeocoder,
+        Map
     },
     data() {
         return {
@@ -149,9 +153,16 @@ export default {
             eventSource: null,
             apiMapboxKey: mapboxKey,
             selectedLoad: null,
-            startingPin: null,
-            destinationPin: null,
-            control: null
+            startingPin: [0, 0],
+            destinationPin: [0, 0],
+            control: null,
+            location: {
+                lng: 0,
+                lat: 0,
+                zoom: 1,
+                bearing: 0,
+                pitch: 0
+            }
         };
     },
     async created() {
@@ -160,9 +171,10 @@ export default {
         console.log(this.startingPin)
         this.destinationPin = this.startingPin
         this.mapCenter = this.startingPin
+        
     },
     mounted() {
-        console.log(this.control)
+
     },
     methods: {
         async getMetrics() {
@@ -174,6 +186,8 @@ export default {
                 this.metrics.mileage = this.metrics.mileage.toFixed(0)
                 this.metrics.last_month_mileage = this.metrics.last_month_mileage.toFixed(0)
                 this.startingPin = [this.metrics.positionLongitude, this.metrics.positionLatitude]
+                this.location.lng = this.metrics.positionLongitude
+                this.location.lat = this.metrics.positionLatitude
                 this.metrics.latestLoads.forEach(load => {
                     load.profit = load.profit.toFixed(2)
                     load.score = load.score.toFixed(2)
@@ -235,3 +249,7 @@ export default {
 };
 
 </script>
+
+<style>
+
+</style>
