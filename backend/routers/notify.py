@@ -10,6 +10,7 @@ def event_generator(truck_id: str) -> Generator:
     """
     This function generates server-sent events.
     """
+    store.set_data(truck_id, "")
     while True:
         # check if new event is available for this truckId in redis
         event = store.get_data(truck_id)
