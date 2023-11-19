@@ -64,7 +64,12 @@
                 </Card>
                 <Card class="col-span-1">
                     <template #content>
-                        
+                        <MapboxMap
+                            style="height: 400px"
+                            access-token="pk.eyJ1IjoiYXJpYTcwMCIsImEiOiJjbHA0eHZzNTUwMWxnMmtxeWxidGdqM241In0.O-fgyH_RaB9GOuBn6g1Nlg"
+                            map-style="mapbox://styles/mapbox/streets-v11"
+                            :center="mapCenter"
+                            :zoom="1" />
                     </template>
                 </Card>
             </div>  
@@ -74,20 +79,24 @@
 
 <script>
 import Container from "@/components/Container.vue";
-import axios from 'axios'
-const baseUrl = import.meta.env.VITE_API_SERVER_URL
-
-
+import axios from 'axios';
+import { MapboxMap } from '@studiometa/vue-mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+const baseUrl = import.meta.env.VITE_API_SERVER_URL;
+const mapboxKey = import.meta.env.VITE_MAP_BOX_GL;
+console.log(mapboxKey)
 export default {
     name: "TruckerMetrics",
     props: ['username'],
     components: {
         Container,
+        MapboxMap
     },
     data() {
         return {
+            mapCenter : [0,0],// [lng, lat]
             metrics: {},
-
+            apiMapboxKey: mapboxKey
         };
     },
     created() {
