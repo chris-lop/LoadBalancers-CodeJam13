@@ -16,7 +16,7 @@
       </div>
 
       <!-- Right Section -->
-      <div>
+      <div style ="padding-top: 5%">
         <img
         src="../assets/truck.jpg"
             alt="Image"
