@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from routers import metrics, notify
 import asyncio
+from redis_store import store
 
 import MQTT
 
@@ -12,6 +13,7 @@ app = FastAPI()
 import logging
 
 def start_MQTT():
+    store.redis.flushall()
     logging.info('Starting MQTT...')
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

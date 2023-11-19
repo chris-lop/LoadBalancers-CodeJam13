@@ -5,12 +5,12 @@
                     <i class="pi pi-box self-center" style="font-size: 2rem; margin-right: 0.5rem;"></i>
                     <div class="font-medium text-lg my-3 text-900 pr-[10px]">{{ slotProps.message.summary }}</div>
                     <div>
-                        <p>Price: {{ slotProps.message.data.profit }}</p>
-                        <p>Distance: {{ slotProps.message.data.mileage }}</p>
+                        <p>Price: {{ slotProps.message.data.profit }} $</p>
+                        <p>Distance: {{ slotProps.message.data.mileage }} mi</p>
 
                     </div>
                 </div>
-                <Button class="p-button-sm text-sm items-center px-2 py-1 self-center" severity="success" label="Accept" @click="onAccept()"></Button>
+                <Button class="p-button-sm text-sm items-center px-2 py-1 self-center" severity="success" label="Accept" @click="onAccept(slotProps.message.data.originLatitude,slotProps.message.data.originLongitude )"></Button>
             </template>
         </Toast>
     <Container> 
@@ -98,7 +98,7 @@
                             </template>
                             <Column field="loadId" header="ID" sortable />
                             <Column field="profit" header="Profit" sortable />
-                            <Column field="score" header="Score" sortable />
+                            <Column field="mileage" header="Mileage" sortable />
                             <Column field="timestamp" header="Time" sortable />
                         </DataTable>
                     </template>
@@ -206,7 +206,6 @@ export default {
                 if(this.metrics.latestLoads.length >= 5) {
                     this.metrics.latestLoads.pop()
                 }
-                console.log(this.metrics.latestLoads)
                 data.timestamp = data.timestamp.split('T')[1]
                 this.metrics.latestLoads.unshift(data)
             };
@@ -227,8 +226,9 @@ export default {
                 this.control.query(query)
             }
         },
-        onAccept() {
-            console.log('onAccept');
+        onAccept(lat,lgt) {
+            this.location.secLat = lat
+            this.location.secLng = lgt
         },
     },   
 };

@@ -31,7 +31,7 @@ def on_message(client, topic, payload, qos, properties):
     latestTimestamp = payload["timestamp"]
     if(payload["type"] == "Truck"):
         init_truck(payload)
-        print("Truck " + str(payload["truckId"]) + " updated")
+        #print("Truck " + str(payload["truckId"]) + " updated")
     elif(payload["type"] == "Load"):
         init_load(payload)
     elif(payload["type"] == "End"):
@@ -114,6 +114,14 @@ def notify_truck(load_id):
         if added <= 10:
             if scores[i]["score"] > 0:
                 added += 1
+                # check if time without notification is less than 1 hour
+                if (datetime.strptime(latestTimestamp, '%Y-%m-%dT%H:%M:%S') - datetime.strptime(trucks[i]["latestNotification"], '%Y-%m-%dT%H:%M:%S')).total_seconds() < 900 and not trucks[i]["timestamp"] == trucks[i]["latestNotification"]:
+                    added -= 1
+                    #print("Truck ", i, " notified less than 1 hour ago, skipping")
+                    continue
+                #else:
+                    #print("Notifying truck " + str(i) + " with score " + str(scores[i]["score"]))
+                #print(trucks[i]["latestNotification"], trucks[i]["timestamp"])
                 # add timestamp to scores, 
                 scores[i]["timestamp"] = latestTimestamp
                 # add loadId to scores
@@ -128,7 +136,7 @@ def notify_truck(load_id):
                 # set to current timestamp
                 trucks[i]["latestNotification"] = latestTimestamp
                 if len(trucks[i]["latestLoads"]) >= 5:
-                    trucks[i]["latestLoads"].pop(0)
+                    trucks[i]["latestLoads"].pop(4)
                 # insert at beginning
                 trucks[i]["latestLoads"].insert(0, scores[i])
                 store.set_data(i, json.dumps(scores[i]))
@@ -162,11 +170,12 @@ def bird_fly_distance(truck_lat, truck_long, load_lat, load_long):
 
     # Distance in meters
     distance = R * c
-
+    # convert to miles
+    distance = distance * 0.000621371
     return distance
 
 def calculate_distance(truck_lat, truck_long, load_lat, load_long):
-    return random.randint(0, 1000)
+    return bird_fly_distance(truck_lat, truck_long, load_lat, load_long)
     api_key = os.getenv('GOOGLE_API_KEY')
     url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={truck_lat},{truck_long}&destinations={load_lat},{load_long}&key={api_key}'
     
