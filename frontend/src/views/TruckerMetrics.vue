@@ -66,7 +66,7 @@
                     <template #content>
                         <MapboxMap
                             style="height: 400px"
-                            access-token="pk.eyJ1IjoiYXJpYTcwMCIsImEiOiJjbHA0eHZzNTUwMWxnMmtxeWxidGdqM241In0.O-fgyH_RaB9GOuBn6g1Nlg"
+                            :access-token=apiMapboxKey
                             map-style="mapbox://styles/mapbox/streets-v11"
                             :center="mapCenter"
                             :zoom="1" />
@@ -84,7 +84,7 @@ import { MapboxMap } from '@studiometa/vue-mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 const baseUrl = import.meta.env.VITE_API_SERVER_URL;
 const mapboxKey = import.meta.env.VITE_MAP_BOX_GL;
-console.log(mapboxKey)
+
 export default {
     name: "TruckerMetrics",
     props: ['username'],
@@ -94,7 +94,7 @@ export default {
     },
     data() {
         return {
-            mapCenter : [0,0],// [lng, lat]
+            mapCenter : [0,0], 
             metrics: {},
             apiMapboxKey: mapboxKey
         };

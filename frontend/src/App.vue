@@ -9,7 +9,7 @@
         </router-link>
       </template>
     </Menubar>
-    <Card class="fixed top-10 left-0 right-0 h-20 mt-[0.35%]">
+    <Card class="fixed top-10 left-0 right-0 h-20 mt-[0.18%]">
         <template #title>
           <div class="pl-3">
             {{capitalizedRouteName}}
