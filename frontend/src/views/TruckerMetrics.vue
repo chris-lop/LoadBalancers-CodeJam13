@@ -1,6 +1,5 @@
 <template>
-    
-    <Toast position="bottom-center" group="bc" @close="onClose" class="items-center">
+    <Toast position="bottom-center" group="bc" class="items-center">
             <template #message="slotProps" class="items-center">
                 <div class="flex flex-column align-items-start" style="flex: 1">
                     <i class="pi pi-box self-center" style="font-size: 2rem; margin-right: 0.5rem;"></i>
@@ -14,7 +13,6 @@
                 <Button class="p-button-sm text-sm items-center px-2 py-1 self-center" severity="success" label="Accept" @click="onAccept()"></Button>
             </template>
         </Toast>
-    
     <Container> 
         <div class="px-10 pt-16">
             <div class="grid grid-cols-4 gap-4 pb-4">
@@ -92,7 +90,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <Card class="col-span-1">
                     <template #content>
-                        <DataTable :value="metrics.latestLoads" tableStyle="min-width: 30rem">
+                        <DataTable :value="metrics.latestLoads" v-model:selection="selectedLoad" @rowSelect="onRowSelect" selectionMode="single" tableStyle="min-width: 30rem">
                             <template #header>
                                 <div class="flex flex-wrap align-items-center justify-content-between gap-2">
                                     <span class="text-xl text-900 font-bold">Latest Loads</span>
@@ -113,7 +111,11 @@
                         :access-token=apiMapboxKey
                         map-style="mapbox://styles/mapbox/streets-v11"
                         :center="mapCenter"
-                        :zoom="1" />
+                        :zoom="1">
+                            <MapboxMarker :lng-lat=startingPin />
+                            <MapboxMarker :lng-lat="destinationPin" />
+                            <MapboxGeocoder :marker=false :access-token=apiMapboxKey :reverseGeocode=true />
+                        </MapboxMap>
                     </template>
                 </Card>
             </div>  
@@ -124,8 +126,9 @@
 <script>
 import Container from "@/components/Container.vue";
 import axios from 'axios';
-import { MapboxMap } from '@studiometa/vue-mapbox-gl';
+import { MapboxMap, MapboxMarker, MapboxGeolocateControl, MapboxGeocoder } from '@studiometa/vue-mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '@mapbox/mapbox-gl-geocoder/lib/mapbox-gl-geocoder.css';
 const baseUrl = import.meta.env.VITE_API_SERVER_URL;
 const mapboxKey = import.meta.env.VITE_MAP_BOX_GL;
 
@@ -134,23 +137,32 @@ export default {
     props: ['username'],
     components: {
         Container,
-        MapboxMap
+        MapboxMap,
+        MapboxMarker,
+        MapboxGeolocateControl,
+        MapboxGeocoder
     },
     data() {
         return {
-            mapCenter : [0,0], 
+            mapCenter: [0, 0], 
             metrics: {},
             eventSource: null,
-            apiMapboxKey: mapboxKey
+            apiMapboxKey: mapboxKey,
+            selectedLoad: null,
+            startingPin: null,
+            destinationPin: null,
+            control: null
         };
     },
-    created() {
+    async created() {
         this.getEvents()
-        this.getMetrics()
-        
+        await this.getMetrics()
+        console.log(this.startingPin)
+        this.destinationPin = this.startingPin
+        this.mapCenter = this.startingPin
     },
     mounted() {
-        
+        console.log(this.control)
     },
     methods: {
         async getMetrics() {
@@ -158,9 +170,10 @@ export default {
                 const response = await axios.get(`${baseUrl}/metrics/${this.username}`)
                 this.metrics = response.data
                 // format
+                console.log(this.metrics)
                 this.metrics.mileage = this.metrics.mileage.toFixed(0)
                 this.metrics.last_month_mileage = this.metrics.last_month_mileage.toFixed(0)
-                
+                this.startingPin = [this.metrics.positionLongitude, this.metrics.positionLatitude]
                 this.metrics.latestLoads.forEach(load => {
                     load.profit = load.profit.toFixed(2)
                     load.score = load.score.toFixed(2)
@@ -200,15 +213,23 @@ export default {
                 console.error('EventSource failed:', error);
             };
         },
-        
-        onClose() {
-            console.log('onClose');
+        onRowSelect(event) {
+            console.log(event.data);
+            console.log(this.control)
+            this.mapCenter = [event.data.destinationLongitude, event.data.destinationLatitude]
+            this.destinationPin = [event.data.destinationLongitude, event.data.destinationLatitude]
+            this.search(String(event.data.destinationLatitude + ', ' + event.data.destinationLongitude))
+        },
+        search(query){
+            console.log(query)
+            console.log(this.control)
+            if (this.control){
+                console.log(this.geocodeControl)
+                this.control.query(query)
+            }
         },
         onAccept() {
             console.log('onAccept');
-        },
-        onDecline() {
-            console.log('onDecline');
         },
     },   
 };
