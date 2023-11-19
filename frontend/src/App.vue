@@ -41,6 +41,10 @@
     computed: {
       capitalizedRouteName() {
         const routeName = this.$route.name
+        //if the route has a slug, append the slug to the route name
+        if (this.$route.params.username) {
+          return routeName ? routeName.charAt(0).toUpperCase() + routeName.slice(1) + ' - ' + this.$route.params.username : ''
+        }
         return routeName ? routeName.charAt(0).toUpperCase() + routeName.slice(1) : ''
       }
     }
