@@ -1,7 +1,7 @@
 <template>
   <div>
     <router-view />
-    <Menubar class="fixed top-0 left-0 right-0" :model="items">
+    <Menubar class="fixed top-0 left-0 right-0 rounded-none" :model="items">
       <template #item="{ item }">
         <router-link :to="item.to" class="p-3">
           <i :class="item.icon"></i>
@@ -9,7 +9,7 @@
         </router-link>
       </template>
     </Menubar>
-    <Card class="fixed top-10 left-0 right-0 h-20 mt-[0.13%]">
+    <Card class="rounded-none fixed top-10 left-0 right-0 h-20 mt-[0.13%]">
         <template #title>
           <div class="pl-3">
             {{capitalizedRouteName}}
