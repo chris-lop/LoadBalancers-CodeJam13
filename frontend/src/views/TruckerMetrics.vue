@@ -17,10 +17,10 @@
                         </div>
                         <div class="flex flex-row justify-center">
                             <div class="pr-1">
-                                <i class="pi pi-arrow-up"></i>
+                                <i class="pi" :class="{'pi-arrow-up': metrics.earnings - metrics.last_month_earnings >= 0, 'pi-arrow-down': metrics.earnings - metrics.last_month_earnings < 0}"></i>
                             </div>
                             <div>
-                                <p>+25</p>
+                                <p>{{ metrics.earnings - metrics.last_month_earnings }}$</p>
                             </div>
                         </div>
                     </template>
@@ -48,17 +48,17 @@
             <div class="grid grid-cols-2 gap-4">
                 <Card class="col-span-1">
                     <template #content>
-                        <DataTable :value="latestLoads" tableStyle="min-width: 30rem">
+                        <DataTable :value="metrics.latestLoads" tableStyle="min-width: 30rem">
                             <template #header>
                                 <div class="flex flex-wrap align-items-center justify-content-between gap-2">
                                     <span class="text-xl text-900 font-bold">Latest Loads</span>
                                     <Button icon="pi pi-refresh" rounded raised />
                                 </div>
                             </template>
-                            <Column field="id" header="ID" sortable />
-                            <Column field="code" header="Code" sortable />
-                            <Column field="name" header="Name" sortable />
-                            <Column field="description" header="Description" sortable />
+                            <Column field="loadId" header="ID" sortable />
+                            <Column field="profit" header="Profit" sortable />
+                            <Column field="score" header="Score" sortable />
+                            <Column field="timestamp" header="Time" sortable />
                         </DataTable>
                     </template>
                 </Card>
@@ -87,18 +87,6 @@ export default {
     data() {
         return {
             metrics: {},
-            latestLoads: [{
-                id: '1000',
-                code: 'f230fh0g3',
-                name: 'Bamboo Watch',
-                description: 'Product Description',
-                image: 'bamboo-watch.jpg',
-                price: 65,
-                category: 'Accessories',
-                quantity: 24,
-                inventoryStatus: 'INSTOCK',
-                rating: 5
-            }],
 
         };
     },
@@ -114,8 +102,14 @@ export default {
         async getMetrics() {
             try {
                 const response = await axios.get(`${baseUrl}/metrics/${this.username}`)
-                console.log(response)
                 this.metrics = response.data
+                // format
+                this.metrics.latestLoads.forEach(load => {
+                    load.profit = load.profit.toFixed(2)
+                    load.score = load.score.toFixed(2)
+                    // format timestamp to only show date
+                    load.timestamp = load.timestamp.split('T')[1]
+                });
             } catch (error) {
                 console.log(error)
             }

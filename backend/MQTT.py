@@ -127,7 +127,8 @@ def notify_truck(load_id):
             trucks[i]["latestNotification"] = latestTimestamp
             if len(trucks[i]["latestLoads"]) >= 5:
                 trucks[i]["latestLoads"].pop(0)
-            trucks[i]["latestLoads"].append(scores[i])
+            # insert at beginning
+            trucks[i]["latestLoads"].insert(0, scores[i])
             store.set_data(i, json.dumps(scores[i]))
             # edit truck metrics
             metrics_data = store.get_data("truck_metrics_" + str(i))
@@ -135,7 +136,7 @@ def notify_truck(load_id):
             metrics_data["latestNotification"] = latestTimestamp
             if len(metrics_data["latestLoads"]) >= 5:
                 metrics_data["latestLoads"].pop(0)
-            metrics_data["latestLoads"].append(scores[i])
+            metrics_data["latestLoads"].insert(0, scores[i])
             store.set_data("truck_metrics_" + str(i), json.dumps(metrics_data))
             #print("Truck " + str(i) + " notified with score " + str(scores[i]))
         else:
